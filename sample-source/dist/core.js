@@ -1,5 +1,6 @@
 /* Public, fictional, browser-local interaction demo. No server/API or authentication. */
 (function(root){'use strict';
+const Assist=typeof module!=='undefined'?require('./form-assist.js'):root.FormAssist;
 const HEADERS=['日付','摘要','摘要内容','支払い金額','預かり金額','差引残高','メモ','未資金化区分','入払区分'];
 const clone=x=>JSON.parse(JSON.stringify(x));
 const now=()=>new Date().toISOString();
@@ -22,6 +23,7 @@ function counts(s){const list=s.people.filter(active);return {total:list.length,
 function audit(s,actor,action,entity,before,after,reason,result='成功'){s.logs.push({id:Math.max(0,...s.logs.map(l=>l.id))+1,at:now(),actor,action,entity:String(entity),before:clone(before===undefined?null:before),after:clone(after===undefined?null:after),reason,result});}
 function checkDeadline(s,kind){const date=s.settings.clock;if(date>s.settings[kind])throw new Error('この操作の期限を過ぎています。幹事にお問い合わせください。');if(kind==='registration'&&date<s.settings.open)throw new Error('申込受付開始前です。');}
 function validatePerson(s,p,isEdit=false){
+ Assist.payer(p.payer);
  for(const key of ['name','kana','email','address','phone','payer'])if(!String(p[key]||'').trim())throw new Error('必須項目をすべて入力してください。');
  if(!Number.isInteger(Number(p.class))||Number(p.class)<1||Number(p.class)>10)throw new Error('3年1組〜10組を選択してください。');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email))throw new Error('メールアドレスの形式を確認してください。');
@@ -30,8 +32,8 @@ function validatePerson(s,p,isEdit=false){
  checkDeadline(s,isEdit?'change':'registration');
  if(!isEdit&&counts(s).total>=s.settings.capacity)throw new Error('参加定員に達しています。');
 }
-function register(s,p){validatePerson(s,p);const id=Math.max(0,...s.people.map(p=>p.id))+1;const n={...clone(p),class:Number(p.class),id,number:'K87-'+String(id).padStart(5,'0'),amount:s.settings.fee,status:'active',created:now(),revision:1};s.people.push(n);audit(s,'申込者（サンプル）','参加申込',n.number,null,{id:n.id,class:n.class,amount:n.amount,public:n.public},'本人の確認操作');s.mail.push({id:s.mail.length+1,personId:id,subject:'参加申込の受付（未送信）',at:now(),body:n.number+' / 仮会費 '+n.amount+'円。これはサンプルです。実際の申込や振込は行わないでください。'});return n;}
-function editPerson(s,id,patch){const p=s.people.find(x=>x.id===id);if(!p||!active(p))throw new Error('変更できる申込ではありません。');validatePerson(s,patch,true);const before={class:p.class,name:p.name,public:p.public,revision:p.revision};Object.assign(p,clone(patch),{class:Number(patch.class),revision:p.revision+1});audit(s,'申込者（サンプル）','申込内容の修正',p.number,before,{class:p.class,name:p.name,public:p.public,revision:p.revision},'期限内の本人修正');s.mail.push({id:s.mail.length+1,personId:id,subject:'申込変更（未送信）',at:now(),body:p.number+' 内容を変更しました。'});return p;}
+function register(s,p){p={...p,payer:Assist.payer(p.payer),display:String(p.display||'').trim()||String(p.name||'').trim()};validatePerson(s,p);const id=Math.max(0,...s.people.map(p=>p.id))+1;const n={...clone(p),class:Number(p.class),id,number:'K87-'+String(id).padStart(5,'0'),amount:s.settings.fee,status:'active',created:now(),revision:1};s.people.push(n);audit(s,'申込者（サンプル）','参加申込',n.number,null,{id:n.id,class:n.class,amount:n.amount,public:n.public},'本人の確認操作');s.mail.push({id:s.mail.length+1,personId:id,subject:'参加申込の受付（未送信）',at:now(),body:n.number+' / 仮会費 '+n.amount+'円。これはサンプルです。実際の申込や振込は行わないでください。'});return n;}
+function editPerson(s,id,patch){patch={...patch,payer:Assist.payer(patch.payer),display:String(patch.display||'').trim()||String(patch.name||'').trim()};const p=s.people.find(x=>x.id===id);if(!p||!active(p))throw new Error('変更できる申込ではありません。');validatePerson(s,patch,true);const before={class:p.class,name:p.name,public:p.public,revision:p.revision};Object.assign(p,clone(patch),{class:Number(patch.class),revision:p.revision+1});audit(s,'申込者（サンプル）','申込内容の修正',p.number,before,{class:p.class,name:p.name,public:p.public,revision:p.revision},'期限内の本人修正');s.mail.push({id:s.mail.length+1,personId:id,subject:'申込変更（未送信）',at:now(),body:p.number+' 内容を変更しました。'});return p;}
 function cancel(s,id,reason){checkDeadline(s,'cancel');const p=s.people.find(x=>x.id===id);if(!p||!active(p))throw new Error('欠席変更できる申込ではありません。');if(!reason.trim())throw new Error('理由を入力してください。');const before=p.status;p.status='cancel_requested';audit(s,'申込者（サンプル）','欠席への変更申請',p.number,{status:before},{status:p.status},reason);return p;}
 function parseCSV(text){text=text.replace(/^\uFEFF/,'');const rows=[];let row=[],field='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++;}else if(!quoted&&field.length)throw new Error('CSVの引用符の位置が不正です。');else quoted=!quoted;}else if(c===','&&!quoted){row.push(field);field='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(x=>x.trim()))rows.push(row);row=[];field='';}else field+=c;}if(quoted)throw new Error('CSVの引用符が閉じられていません。');row.push(field);if(row.some(x=>x.trim()))rows.push(row);return rows;}
 function parseMoney(v){const n=String(v||'').normalize('NFKC').replace(/[,￥¥円\s]/g,'');if(!n)return 0;if(!/^\d+$/.test(n))throw new Error('金額の形式が不正です');const x=Number(n);if(!Number.isSafeInteger(x))throw new Error('金額が大きすぎます');return x;}
@@ -44,6 +46,6 @@ function unallocate(s,id,reason,actor){const a=s.allocations.find(x=>x.id===id);
 function csvCell(v){v=String(v??'');if(/^[\s]*[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}
 function toCSV(rows){return '\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');}
 function fixtures(part=1){const a=['20261027','振込','K87-00003 サンプル003','','8,000','108,000','','0','入金'],b=['261027','振込','K87-00006 サンプル006','','8,000','116,000','','0','入金'],c=['2026/10/27','振込','同日同額同名義の架空例','','8,000','124,000','','0','入金'],d=['2026/10/27','振込','同日同額同名義の架空例','','8,000','132,000','','0','入金'];const rows=part===1?[a,b,c]:part===2?[b,c,d]:[['2026/10/27','振込','該当なし','','6,000','138,000','','未資金化','入金'],['2026/10/27','支払','出金テスト','1,000','','137,000','','','出金'],['20261345','振込','日付エラー','','8,000','145,000','','','入金']];return toCSV([['架空口座・操作確認用・実明細ではありません'],HEADERS,...rows]);}
-const API={HEADERS,clone,seed,sampleProfile,active,totalPaid,due,paymentLabel,counts,audit,checkDeadline,validatePerson,register,editPerson,cancel,parseCSV,parseMoney,parseDate,importCSV,used,decide,allocate,unallocate,toCSV,fixtures};
+const API={normalizePayer:Assist.payer,HEADERS,clone,seed,sampleProfile,active,totalPaid,due,paymentLabel,counts,audit,checkDeadline,validatePerson,register,editPerson,cancel,parseCSV,parseMoney,parseDate,importCSV,used,decide,allocate,unallocate,toCSV,fixtures};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;root.Reunion=API;
 })(typeof globalThis!=='undefined'?globalThis:this);

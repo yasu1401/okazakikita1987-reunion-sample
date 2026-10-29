@@ -116,6 +116,13 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(owner,'file&id='+str(pfid));check(s==403,'削除後は幹事の直接画像取得も不可')
         s,b=post(owner,'admin_photos','photo_restore',{'id':pfid,'reason':'復元試験'});check(s==200 and con.execute('select published from private_files where id=?',(pfid,)).fetchone()[0]==0,'誤削除は非公開で復元・自動再掲載なし')
         s,b=request(participant,'file&id='+str(pfid));check(s==403,'非公開復元後も参加者へ配信しない')
+        signup=client();values={'class':1,'name':'見本 太郎','kana':'ミホン タロウ','address':'架空市','phone':'000-0000','email':'kana-form@example.test','email_confirm':'kana-form@example.test','password':'Sample1987!','password_confirm':'Sample1987!','payer':'やまだ　ﾀﾛｳ','display':'','public':'yes'}
+        s,b=post(signup,'register','register',values);check(s==200,'表示名未指定・ひらがな半角名義で架空申込')
+        uid=con.execute("select id from users where email='kana-form@example.test'").fetchone()[0]
+        import json
+        stored=json.loads(con.execute('select data_json from registrations where user_id=?',(uid,)).fetchone()[0]);check(stored['display']=='見本 太郎' and stored['payer']=='ヤマダ タロウ','サーバーでも表示名を補完・名義を統一して保存')
+        s,b=post(signup,'edit','edit',{**values,'name':'見本 次郎','display':'卒業時の見本名','payer':'ﾐﾎﾝ ｼﾞﾛｳ'});stored=json.loads(con.execute('select data_json from registrations where user_id=?',(uid,)).fetchone()[0]);check(s==200 and stored['display']=='卒業時の見本名' and stored['payer']=='ミホン ジロウ','表示名の手動変更を保持して保存')
+        s,b=post(signup,'edit','edit',{**values,'payer':'山田 太郎'});check(s==400,'直接POSTした漢字名義も拒否')
         srv.terminate();srv.wait();srv=subprocess.Popen([php,'-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         time.sleep(.3);s,b=request(login(1),'admin_accounting');check(s==200 and '架空店'.encode() in b,'再起動後も経費とDBが残る')
         print('ALL',n,'HTTP CHECKS PASSED')
