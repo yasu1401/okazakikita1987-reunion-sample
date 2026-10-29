@@ -1,0 +1,7 @@
+server/var/
+server/config.local.php
+*.sqlite*
+*.log
+.env
+.DS_Store
+__pycache__/
