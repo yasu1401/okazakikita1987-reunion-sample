@@ -1,6 +1,6 @@
 <?php
 require __DIR__.'/domain.php';require APP_ROOT.'/src/community.php';
-$d=['name'=>'架空問い合わせ','email'=>'Reply@Example.test','subject'=>'参加について <script>','body'=>'架空の質問本文'];$nonce=str_repeat('a',32);
+$d=['class'=>'3','name'=>'架空問い合わせ','email'=>'Reply@Example.test','subject'=>'参加について <script>','body'=>'架空の質問本文'];$nonce=str_repeat('a',32);
 $id=atomic(fn()=>submitInquiry(null,$d,'bucket',$nonce));
 check(one('SELECT user_id,email FROM inquiries WHERE id=?',[$id])===['user_id'=>null,'email'=>'reply@example.test'],'未ログイン問い合わせ・返信先を保存');
 check(atomic(fn()=>submitInquiry(null,$d,'bucket',$nonce))===$id,'同じ問い合わせの再実行を重複保存しない');
@@ -23,4 +23,8 @@ atomic(fn()=>saveAlbum($a,['id'=>1,'name'=>'当日の思い出','description'=>'
 schema();check((int)one('SELECT COUNT(*) n FROM albums')['n']===3&&one('SELECT name FROM albums WHERE id=1')['name']==='当日の思い出','再マイグレーションでアルバム設定を保持');
 for($j=1;$j<10;$j++)atomic(fn()=>submitInquiry(null,$d,'bucket',str_pad(dechex($j),32,'0',STR_PAD_LEFT)));
 denied(fn()=>atomic(fn()=>submitInquiry(null,$d,'bucket',str_repeat('e',32))),'問い合わせの連続送信を制限');
+$unknown=atomic(fn()=>submitInquiry(null,[...$d,'class'=>'0'],'other',str_repeat('f',32)));
+check((int)one('SELECT class_no FROM inquiries WHERE id=?',[$unknown])['class_no']===0,'クラスを忘れたを明示して保存');
+check((int)one('SELECT class_no FROM inquiries WHERE id=?',[$id])['class_no']===3,'問い合わせの選択クラスを保存');
+denied(fn()=>atomic(fn()=>submitInquiry(null,[...$d,'class'=>'11'],'other',str_repeat('1',32))),'範囲外クラスを拒否');
 echo "ALL $n COMMUNITY-INCLUSIVE CHECKS PASSED\n";

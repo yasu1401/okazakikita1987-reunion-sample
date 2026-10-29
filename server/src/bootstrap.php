@@ -41,6 +41,8 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  'reset_tokens'=>"id $id, user_id INTEGER NOT NULL, token_hash VARCHAR(64) NOT NULL UNIQUE, expires INTEGER NOT NULL, used INTEGER NOT NULL"
  ];foreach($defs as $table=>$def)$db->exec("CREATE TABLE IF NOT EXISTS $table ($def)".($mysql?' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4':''));if(!one('SELECT id FROM app_lock WHERE id=1'))q('INSERT INTO app_lock VALUES (1,0)');if(!one('SELECT id FROM settings WHERE id=1'))q('INSERT INTO settings VALUES (1,?)',[jsonv(['dateLabel'=>'2028年○月○日（未定）','venue'=>'岡崎ニューグランドホテル','fee'=>8000,'capacity'=>500,'open'=>'2026-10-01','registration'=>'2028-07-31','payment'=>'2028-08-31','change'=>'2028-09-30','cancel'=>'2028-09-30','photoEnd'=>'2029-03-31','opening'=>0])]);$columns=$mysql?array_column(all('SHOW COLUMNS FROM private_files'),'Field'):array_column(all('PRAGMA table_info(private_files)'),'name');
  if(!in_array('album_id',$columns,true))$db->exec('ALTER TABLE private_files ADD COLUMN album_id INTEGER NOT NULL DEFAULT 1');
+ $inquiryColumns=$mysql?array_column(all('SHOW COLUMNS FROM inquiries'),'Field'):array_column(all('PRAGMA table_info(inquiries)'),'name');
+ if(!in_array('class_no',$inquiryColumns,true))$db->exec('ALTER TABLE inquiries ADD COLUMN class_no INTEGER NULL');
  if(!one('SELECT id FROM albums LIMIT 1'))foreach(['当日の様子','集合写真','懇親会'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
 }
 function atomic(callable $fn):mixed{global $db;$db->beginTransaction();try{q('UPDATE app_lock SET version=version+1 WHERE id=1');$r=$fn();$db->commit();return $r;}catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}}

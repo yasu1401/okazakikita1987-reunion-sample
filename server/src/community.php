@@ -20,10 +20,11 @@ function submitInquiry(?array $u,array $d,string $bucket,string $submission):int
     if($old)return (int)$old['id'];
     $since=date('Y-m-d H:i:s',time()-3600);
     requirev((int)one('SELECT COUNT(*) n FROM inquiries WHERE request_bucket=? AND created>?',[$bucket,$since])['n']<10,'送信回数が多いため、時間をおいてお試しください。');
+    $class=(string)($d['class']??'');requirev((bool)preg_match('/^(?:[0-9]|10)$/D',$class),'クラスを選択してください。');
     $name=textValue($d,'name',600);$email=emailValue((string)($d['email']??''));$subject=textValue($d,'subject',600);$body=textValue($d,'body',30000);
     // Database VARCHAR bounds are characters; byte limits above also cap multibyte inputs.
     requirev(mb_strlen($name)<=200&&mb_strlen($subject)<=200,'氏名・件名は200文字以内です。');
-    q('INSERT INTO inquiries (user_id,name,email,subject,body,status,assignee_id,submission_key,request_bucket,created) VALUES (?,?,?,?,?,?,?,?,?,?)',[$u['id']??null,$name,$email,$subject,$body,'new',null,$key,$bucket,nowv()]);
+    q('INSERT INTO inquiries (user_id,name,email,subject,body,status,assignee_id,submission_key,request_bucket,created,class_no) VALUES (?,?,?,?,?,?,?,?,?,?,?)',[$u['id']??null,$name,$email,$subject,$body,'new',null,$key,$bucket,nowv(),(int)$class]);
     $id=(int)$db->lastInsertId();logv(isset($u['id'])?(int)$u['id']:null,'問い合わせ受付','inquiry:'.$id,null,['status'=>'new'],'公開フォームから受付');return $id;
 }
 function adminInquiry(array $u):void {requirev(in_array($u['role'],['organizer','owner'],true),'幹事権限が必要です。');}

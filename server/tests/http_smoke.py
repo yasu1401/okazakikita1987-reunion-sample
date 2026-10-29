@@ -68,10 +68,11 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         # Public inquiries, protected replies, class contacts and scene albums.
         s,b=request(anon,'home');check(s==200 and b'name="submission"' in b,'未ログインのトップに問い合わせフォーム')
         nonce=re.search(rb'name="submission" value="([a-f0-9]+)"',b)[1].decode()
-        inquiry={'name':'架空の質問者','email':'reply@example.test','subject':'問い合わせ <script>','body':'秘密の見本本文','submission':nonce}
+        inquiry={'class':'0','name':'架空の質問者','email':'reply@example.test','subject':'問い合わせ <script>','body':'秘密の見本本文','submission':nonce}
         s,b=post(anon,'home','contact',inquiry);check(s==200 and '受け付けました'.encode() in b,'未ログインから問い合わせ受付')
+        check(con.execute('select class_no from inquiries where id=1').fetchone()[0]==0,'クラスを忘れたの選択をDB保存')
         s,b=request(participant,'admin_inquiries&id=1');check(s==403 and '秘密の見本本文'.encode() not in b,'参加者から問い合わせ管理を拒否')
-        s,b=request(owner,'admin_inquiries&id=1');check(s==200 and b'&lt;script&gt;' in b and '秘密の見本本文'.encode() in b,'幹事が本文確認・XSS文字をエスケープ')
+        s,b=request(owner,'admin_inquiries&id=1');check(s==200 and 'クラスを忘れた'.encode() in b and b'&lt;script&gt;' in b and '秘密の見本本文'.encode() in b,'幹事が本文確認・XSS文字をエスケープ')
         key=re.search(rb'name="reply_key" value="([a-f0-9]+)"',b)[1].decode()
         s,b=post(owner,'admin_inquiries&id=1','inquiry_reply',{'id':1,'body':'架空の回答です','reply_key':key,'to_email':'forged@example.test'})
         check(s==200 and '架空の回答です'.encode() in b,'幹事から返信を保存・履歴表示')
