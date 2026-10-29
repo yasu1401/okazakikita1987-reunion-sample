@@ -3,3 +3,5 @@
 .message-body{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;padding:18px;background:#f6f4ee;border-radius:10px}#contact{scroll-margin-top:100px}.name-card strong{font-size:21px}textarea{min-height:120px}
 
 .hero .lead.reunion-title{font-size:clamp(20px,2.2vw,28px);line-height:1.65;letter-spacing:.035em;margin:28px 0 14px}.reunion-title span{display:inline-block;white-space:nowrap}.reunion-title span+span{margin-left:.25em}@media(max-width:760px){.hero .lead.reunion-title{font-size:22px;line-height:1.7;margin-top:24px}.reunion-title span+span{margin-left:0}}
+
+.photo-caption{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}.photo-consent{display:flex;gap:10px;align-items:flex-start;margin:20px 0;font-size:13px}.photo-consent input{width:auto;flex:none;margin-top:5px}.post-photo-preview{width:100%;max-height:300px;object-fit:contain}.photo-editor{margin-top:18px}.photo-editor textarea{width:100%}

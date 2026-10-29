@@ -90,6 +90,28 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         post(owner,'admin_photos','album_save',{'id':aid,'name':'二次会の思い出','description':'見本','position':4,'visible':'no','reason':'非表示'})
         s,b=request(participant,'file&id='+str(photoid));check(s==403,'非表示アルバムの写真を直接URLでも拒否')
         s,b=request(participant,'gallery');check('二次会の思い出'.encode() not in b,'非表示アルバムを参加者の一覧から除外')
+        # Participant photo posting, administrator moderation, direct-URL revocation.
+        s,b=request(participant,'my');check(s==200 and '写真とコメントを投稿する'.encode() in b,'本人画面に投稿フォーム')
+        nonce=re.search(rb'name="post_key" value="([a-f0-9]+)"',b)[1].decode()
+        postdata={'title':'最近の風景','caption':'架空コメント <script>alert(1)</script>','author':'見本ニックネーム','consent':'yes','post_key':nonce,'owner_id':1,'album_id':1}
+        before=con.execute('select count(*) from private_files').fetchone()[0]
+        s,b=request(participant,'my',{'csrf':'forged','action':'post_photo',**postdata},{'photo':('sample.png','image/png',png)});check(s==400 and con.execute('select count(*) from private_files').fetchone()[0]==before,'写真投稿のCSRFを拒否・保存なし')
+        s,b=post(participant,'my','post_photo',postdata,{'photo':('sample.png','image/png',png)});check(s==200 and '掲載しました'.encode() in b,'参加者がJPEG/PNGを投稿し自動掲載')
+        pfid,ownerid,pa,publication=con.execute('select id,owner_id,album_id,published from private_files where submitted=1 order by id desc limit 1').fetchone()
+        submissionalbum=con.execute("select id from albums where purpose='submissions'").fetchone()[0]
+        check(ownerid==3 and pa==submissionalbum and publication==1,'投稿者・投稿先・公開状態はサーバー側で固定')
+        post(participant,'my','post_photo',postdata,{'photo':('same.png','image/png',png)})
+        check(con.execute('select count(*) from private_files where submitted=1').fetchone()[0]==1,'二重送信で写真を重複登録しない')
+        s,b=request(participant,'gallery&album='+str(submissionalbum));check(b'&lt;script&gt;' in b and '見本ニックネーム'.encode() in b,'投稿写真・コメント・表示名を表示しXSSを無害化')
+        edit={'id':pfid,'title':'幹事修正','caption':'修正したコメント','author':'見本名','album_id':submissionalbum,'sort_order':2,'published':'yes','reason':'内容確認'}
+        s,b=post(participant,'my','photo_edit',edit);check(s==400,'参加者による管理者の編集操作を拒否')
+        s,b=post(owner,'admin_photos','photo_edit',edit);check(s==200,'幹事が投稿のタイトル・コメント・表示順を編集')
+        s,b=request(participant,'gallery&album='+str(submissionalbum));check('修正したコメント'.encode() in b and b'alert(1)' not in b,'幹事の修正をアルバムに反映')
+        s,b=post(owner,'admin_photos','photo_remove',{'id':pfid,'reason':'掲載取下げ試験'});check(s==200,'幹事が写真を削除・履歴保持')
+        s,b=request(participant,'file&id='+str(pfid));check(s==403,'削除後の写真は直接URLでも取得不可')
+        s,b=request(owner,'file&id='+str(pfid));check(s==403,'削除後は幹事の直接画像取得も不可')
+        s,b=post(owner,'admin_photos','photo_restore',{'id':pfid,'reason':'復元試験'});check(s==200 and con.execute('select published from private_files where id=?',(pfid,)).fetchone()[0]==0,'誤削除は非公開で復元・自動再掲載なし')
+        s,b=request(participant,'file&id='+str(pfid));check(s==403,'非公開復元後も参加者へ配信しない')
         srv.terminate();srv.wait();srv=subprocess.Popen([php,'-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         time.sleep(.3);s,b=request(login(1),'admin_accounting');check(s==200 and '架空店'.encode() in b,'再起動後も経費とDBが残る')
         print('ALL',n,'HTTP CHECKS PASSED')

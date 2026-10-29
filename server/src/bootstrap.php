@@ -43,7 +43,13 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  if(!in_array('album_id',$columns,true))$db->exec('ALTER TABLE private_files ADD COLUMN album_id INTEGER NOT NULL DEFAULT 1');
  $inquiryColumns=$mysql?array_column(all('SHOW COLUMNS FROM inquiries'),'Field'):array_column(all('PRAGMA table_info(inquiries)'),'name');
  if(!in_array('class_no',$inquiryColumns,true))$db->exec('ALTER TABLE inquiries ADD COLUMN class_no INTEGER NULL');
- if(!one('SELECT id FROM albums LIMIT 1'))foreach(['思い出アルバム'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
+ $fileFields=['photo_title'=>"VARCHAR(200) NOT NULL DEFAULT ''",'caption'=>"TEXT",'author_label'=>"VARCHAR(100) NOT NULL DEFAULT ''",'sort_order'=>'INTEGER NOT NULL DEFAULT 0','deleted'=>'INTEGER NOT NULL DEFAULT 0','submitted'=>'INTEGER NOT NULL DEFAULT 0','post_key'=>'VARCHAR(64) NULL'];
+ foreach($fileFields as $column=>$definition)if(!in_array($column,$columns,true))$db->exec("ALTER TABLE private_files ADD COLUMN $column $definition");
+ $albumColumns=$mysql?array_column(all('SHOW COLUMNS FROM albums'),'Field'):array_column(all('PRAGMA table_info(albums)'),'name');
+ if(!in_array('purpose',$albumColumns,true))$db->exec("ALTER TABLE albums ADD COLUMN purpose VARCHAR(30) NOT NULL DEFAULT ''");
+ q("UPDATE albums SET name='フォトアルバム' WHERE name='思い出アルバム'");
+ if(!one('SELECT id FROM albums LIMIT 1'))foreach(['フォトアルバム'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
+ if(!one("SELECT id FROM albums WHERE purpose='submissions'"))q("INSERT INTO albums (name,description,position_no,visible,purpose) VALUES (?,?,?,1,'submissions')",['みんなの投稿写真','最近の一枚や、身近な風景。みんなの写真とコメントをどうぞ。',50]);
 }
 function atomic(callable $fn):mixed{global $db;$db->beginTransaction();try{q('UPDATE app_lock SET version=version+1 WHERE id=1');$r=$fn();$db->commit();return $r;}catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}}
 function logv(?int $actor,string $action,string $entity,mixed $before,mixed $after,string $reason):void{q('INSERT INTO audit_logs (actor_id,action,entity,before_json,after_json,reason,created) VALUES (?,?,?,?,?,?,?)',[$actor,$action,$entity,jsonv($before),jsonv($after),$reason,nowv()]);}

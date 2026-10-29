@@ -20,7 +20,7 @@ atomic(fn()=>removeClassContact($a,['id'=>1,'reason'=>'入替']));denied(fn()=>s
 q("UPDATE registrations SET status='cancelled' WHERE user_id=4");check(count(classContacts(1))===1,'欠席者をクラス幹事の案内から除外');
 $photo=['kind'=>'photo','published'=>1,'album_id'=>1];check(canFile($p,$photo),'既存写真は最初のアルバムで閲覧可能');
 atomic(fn()=>saveAlbum($a,['id'=>1,'name'=>'当日の思い出','description'=>'見本','position'=>1,'visible'=>'no','reason'=>'非公開試験']));check(!canFile($p,$photo)&&canFile($a,$photo),'非表示アルバムは写真の直接取得も拒否・管理者確認可');
-schema();check((int)one('SELECT COUNT(*) n FROM albums')['n']===1&&one('SELECT name FROM albums WHERE id=1')['name']==='当日の思い出','再マイグレーションでアルバム設定を保持');
+schema();check((int)one('SELECT COUNT(*) n FROM albums')['n']===2&&one('SELECT name FROM albums WHERE id=1')['name']==='当日の思い出','再マイグレーションでアルバム設定を保持');
 for($j=1;$j<10;$j++)atomic(fn()=>submitInquiry(null,$d,'bucket',str_pad(dechex($j),32,'0',STR_PAD_LEFT)));
 denied(fn()=>atomic(fn()=>submitInquiry(null,$d,'bucket',str_repeat('e',32))),'問い合わせの連続送信を制限');
 $unknown=atomic(fn()=>submitInquiry(null,[...$d,'class'=>'0'],'other',str_repeat('f',32)));
