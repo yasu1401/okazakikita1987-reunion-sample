@@ -3,3 +3,5 @@
 .protected-photo{width:100%;max-height:420px;object-fit:contain}.container>form{margin-bottom:18px}header nav{flex-wrap:wrap}@media(max-width:650px){header{flex-wrap:wrap;gap:12px}header nav{display:flex;position:static;width:100%;gap:12px}header nav a{font-size:13px}main.container{padding-top:20px}}
 
 .honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.message-body{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;padding:18px;background:#f6f4ee;border-radius:10px}.contact-assignment{padding:18px 0;border-bottom:1px solid #ddd}.name-card strong{font-size:21px}#contact{scroll-margin-top:100px}textarea{min-height:120px}
+
+.hero .lead.reunion-title{font-size:clamp(20px,2.2vw,28px);line-height:1.65;letter-spacing:.035em;margin:28px 0 14px}.reunion-title span{display:inline-block;white-space:nowrap}.reunion-title span+span{margin-left:.25em}@media(max-width:760px){.hero .lead.reunion-title{font-size:22px;line-height:1.7;margin-top:24px}.reunion-title span+span{margin-left:0}}
