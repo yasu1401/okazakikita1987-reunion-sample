@@ -8,8 +8,9 @@ s=s.replace('<link rel="stylesheet" href="style.css">','<style>'+(src/'style.css
 for name in ['form-assist.js','core.js','app.js','finance.js','features.js','community-core.js','community.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js']:
     code=(src/name).read_text().replace('</script','<\\/script')
     s=s.replace('<script src="'+name+'"></script>','<script>'+code+'</script>')
-for p in (src/'assets').glob('*.svg'):
-    s=s.replace('assets/'+p.name,'data:image/svg+xml;base64,'+base64.b64encode(p.read_bytes()).decode())
+for p in (src/'assets').iterdir():
+    mime={'.svg':'image/svg+xml','.jpg':'image/jpeg'}.get(p.suffix)
+    if mime:s=s.replace('assets/'+p.name,'data:'+mime+';base64,'+base64.b64encode(p.read_bytes()).decode())
 s=s.replace('/assets/social-preview.png','/social-preview.png')
 (out/'index.html').write_text(s)
 (out/'social-preview.png').write_bytes((src/'assets/social-preview.png').read_bytes())

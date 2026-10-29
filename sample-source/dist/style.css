@@ -15,3 +15,6 @@
 .class-progress{appearance:none;-webkit-appearance:none;display:block;width:100%;height:4px;margin-top:16px;border:0;border-radius:4px;overflow:hidden;background:var(--line);grid-column:1/-1}.class-progress::-webkit-progress-bar{background:var(--line);border-radius:4px}.class-progress::-webkit-progress-value{background:var(--green);border-radius:4px}.class-progress::-moz-progress-bar{background:var(--green);border-radius:4px}
 
 .overview-content .registration-label{font-size:13px;margin:0 0 9px;color:var(--muted)}.registration-period{display:flex;flex-wrap:wrap;gap:0 10px;font-size:clamp(24px,2.4vw,31px);line-height:1.7;font-family:var(--serif);font-weight:700}.registration-period span{white-space:nowrap}.overview-content .participation-fee{margin:20px 0 0;font-size:16px;color:var(--muted)}.overview-content .participation-fee strong{font-size:22px;margin-left:7px;color:var(--ink)}.participation-fee small{font-size:12px;margin-left:7px}@media(max-width:760px){.registration-period{font-size:24px;gap:0 8px}.overview-content .participation-fee{margin-top:16px;font-size:14px}.overview-content .participation-fee strong{font-size:20px}}
+
+/* Keep the supplied school photograph complete inside the existing card. */
+.photo-card img.school-photo{aspect-ratio:4/3;object-fit:contain;height:auto}
