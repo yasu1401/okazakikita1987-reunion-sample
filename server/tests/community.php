@@ -1,0 +1,26 @@
+<?php
+require __DIR__.'/domain.php';require APP_ROOT.'/src/community.php';
+$d=['name'=>'架空問い合わせ','email'=>'Reply@Example.test','subject'=>'参加について <script>','body'=>'架空の質問本文'];$nonce=str_repeat('a',32);
+$id=atomic(fn()=>submitInquiry(null,$d,'bucket',$nonce));
+check(one('SELECT user_id,email FROM inquiries WHERE id=?',[$id])===['user_id'=>null,'email'=>'reply@example.test'],'未ログイン問い合わせ・返信先を保存');
+check(atomic(fn()=>submitInquiry(null,$d,'bucket',$nonce))===$id,'同じ問い合わせの再実行を重複保存しない');
+denied(fn()=>atomic(fn()=>submitInquiry(null,[...$d,'email'=>"a@example.test\r\nBcc:x@example.test"],'bucket',str_repeat('b',32))),'メールヘッダー注入を拒否');
+denied(fn()=>replyInquiry($p,['id'=>$id,'body'=>'回答','reply_key'=>str_repeat('c',32)]),'参加者の返信操作を拒否');
+$reply=['id'=>$id,'body'=>'架空の回答','reply_key'=>str_repeat('c',32),'to_email'=>'forged@example.test'];$rid=atomic(fn()=>replyInquiry($b,$reply));
+check(one('SELECT to_email,status FROM mail_outbox WHERE reply_id=?',[$rid])===['to_email'=>'reply@example.test','status'=>'development'],'返信先は元の入力・開発メールに保存');
+check(atomic(fn()=>replyInquiry($b,$reply))===$rid&&(int)one('SELECT COUNT(*) n FROM mail_outbox')['n']===1,'返信の再実行でメールを重複しない');
+atomic(fn()=>updateInquiry($a,['id'=>$id,'status'=>'closed','assignee'=>2,'reason'=>'回答確認']));check(one('SELECT status FROM inquiries WHERE id=?',[$id])['status']==='closed','対応済みと担当を記録');
+denied(fn()=>updateInquiry($a,['id'=>$id,'status'=>'closed','assignee'=>3,'reason'=>'拒否確認']),'担当を一般参加者にしない');
+for($j=4;$j<=6;$j++){$d2=$person($j);$d2['class']=1;atomic(fn()=>registerPerson($d2));}
+foreach([1,4,5] as $j)atomic(fn()=>setClassContact($a,['class'=>1,'user_id'=>$j,'position'=>1,'reason'=>'見本指定']));
+check(count(classContacts(1))===3&&publicUser(4)['role']==='participant','クラス幹事3名表示・管理権限は付与しない');
+denied(fn()=>setClassContact($a,['class'=>1,'user_id'=>6,'reason'=>'上限']),'クラス幹事4人目を拒否');
+denied(fn()=>setClassContact($b,['class'=>2,'user_id'=>2,'reason'=>'権限']),'代表幹事以外の指定を拒否');
+atomic(fn()=>removeClassContact($a,['id'=>1,'reason'=>'入替']));denied(fn()=>setClassContact($a,['class'=>1,'user_id'=>2,'reason'=>'別組']),'他クラスの幹事指定を拒否');
+q("UPDATE registrations SET status='cancelled' WHERE user_id=4");check(count(classContacts(1))===1,'欠席者をクラス幹事の案内から除外');
+$photo=['kind'=>'photo','published'=>1,'album_id'=>1];check(canFile($p,$photo),'既存写真は最初のアルバムで閲覧可能');
+atomic(fn()=>saveAlbum($a,['id'=>1,'name'=>'当日の思い出','description'=>'見本','position'=>1,'visible'=>'no','reason'=>'非公開試験']));check(!canFile($p,$photo)&&canFile($a,$photo),'非表示アルバムは写真の直接取得も拒否・管理者確認可');
+schema();check((int)one('SELECT COUNT(*) n FROM albums')['n']===3&&one('SELECT name FROM albums WHERE id=1')['name']==='当日の思い出','再マイグレーションでアルバム設定を保持');
+for($j=1;$j<10;$j++)atomic(fn()=>submitInquiry(null,$d,'bucket',str_pad(dechex($j),32,'0',STR_PAD_LEFT)));
+denied(fn()=>atomic(fn()=>submitInquiry(null,$d,'bucket',str_repeat('e',32))),'問い合わせの連続送信を制限');
+echo "ALL $n COMMUNITY-INCLUSIVE CHECKS PASSED\n";

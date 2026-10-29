@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parent
 src=root/'dist';out=root/'github-pages';out.mkdir(exist_ok=True)
 s=(src/'index.html').read_text()
 s=s.replace('<link rel="stylesheet" href="style.css">','<style>'+(src/'style.css').read_text()+'</style>')
-for name in ['core.js','app.js','finance.js','features.js']:
+for name in ['core.js','app.js','finance.js','features.js','community-core.js','community.js']:
     code=(src/name).read_text().replace('</script','<\\/script')
     s=s.replace('<script src="'+name+'"></script>','<script>'+code+'</script>')
 for p in (src/'assets').glob('*.svg'):

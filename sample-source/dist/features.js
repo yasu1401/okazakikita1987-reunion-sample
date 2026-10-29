@@ -23,6 +23,4 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-fe
  if(ev.target.closest('#fillDemo'))setTimeout(()=>{const f=document.querySelector('#registrationForm');if(f?.elements.password){f.elements.password.value='Sample1987!';f.elements.passwordConfirm.value='Sample1987!';}},0);
  if(ev.target.closest('[data-action]')&&location.hash.startsWith('#/admin')&&!organizer()){ev.stopImmediatePropagation();toast('幹事ログインが必要です。');}
 },true);
-// Capture the selected class before the original uploader appends its test images.
-document.addEventListener('change',ev=>{if(ev.target.id==='photoFiles'){const cl=Number(document.querySelector('#photoClass')?.value||0),ids=new Set(state.photos.map(p=>p.id));const timer=setInterval(()=>{if(state.photos.some(p=>!ids.has(p.id))){clearInterval(timer);change(s=>s.photos.filter(p=>!ids.has(p.id)).forEach(p=>{p.class=cl;p.album=cl?'3年'+cl+'組':'全体写真';}));route();}},200);setTimeout(()=>clearInterval(timer),10000);}},true);
 route();
