@@ -34,7 +34,10 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         for _ in range(50):
             try:request(client(),'home');break
             except urllib.error.URLError:time.sleep(.1)
-        anon=client();s,b=request(anon,'admin');check(s==403,'未ログインの管理画面は拒否')
+        anon=client();s,b=request(anon,'home');check(s==200 and b'event-overview' in b and '会費 8,000円'.encode() in b and '2028年10月31日'.encode() in b and b'class-card' in b and 'みんな、集まってきています。'.encode() in b,'未ログインのトップに設定日程・会費・クラス人数')
+        check('入金期限'.encode() not in b and 'キャンセル期限'.encode() not in b,'トップに入金・キャンセル期限を表示しない')
+        s,b=request(anon,'register');check(s==200 and '入金期限'.encode() in b and '内容変更期限'.encode() in b and 'キャンセル期限'.encode() in b,'申込フォーム内に入金・変更・キャンセル期限を表示')
+        s,b=request(anon,'admin');check(s==403,'未ログインの管理画面は拒否')
         participant=login(3);s,b=request(participant,'my');check(b'K87-00003' in b and b'K87-00001' not in b,'本人の申込だけを表示')
         s,b=request(participant,'admin_roles');check(s==403,'一般参加者の幹事権限画面を拒否')
         s,b=request(participant,'my',{'action':'cancel','reason':'test','csrf':'forged'});check(s==400,'CSRF不一致の更新を拒否')
