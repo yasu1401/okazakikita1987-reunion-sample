@@ -17,3 +17,6 @@ atomic(fn()=>cancelBroadcast($a,['id'=>$id2,'reason'=>'見本の停止']));
 check((int)one("SELECT COUNT(*) n FROM broadcast_messages WHERE broadcast_id=? AND status<>'cancelled'",[$id2])['n']===0,'停止理由と宛先別停止状態を保存');
 denied(fn()=>atomic(fn()=>queueBroadcast($b,['id'=>$id2,'confirm'=>'yes'])),'停止済みのメールを再登録しない');
 echo "ALL $n BROADCAST-INCLUSIVE CHECKS PASSED\n";
+passwordv('111111',true);check(true,'開発用の申込で共通6桁を許可');
+denied(fn()=>passwordv('111111'),'代表幹事CLI用の通常検証は6桁を拒否');
+$config['mode']='live';denied(fn()=>passwordv('111111',true),'本番では開発用6桁特例を拒否');$config['mode']='development';

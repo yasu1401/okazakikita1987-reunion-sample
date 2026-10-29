@@ -9,7 +9,7 @@ function demoInsert(int $number,int $class,int $position,string $hash,string $st
 }
 function expandDemoRoster():void {
  global $config;requirev($config['mode']==='development','開発環境専用です。');schema();foreach(all('SELECT email FROM users') as $u)requirev(str_ends_with($u['email'],'@example.test'),'架空の見本アカウントのみのDBで実行してください。');
- $hash=password_hash('Sample1987!',PASSWORD_DEFAULT);
+ $hash=password_hash('111111',PASSWORD_DEFAULT);
  atomic(function()use($hash){$updated=0;$added=0;$next=1;foreach(all('SELECT email FROM users') as $u)if(preg_match('/^sample([0-9]+)@example\.test$/D',$u['email'],$m))$next=max($next,(int)$m[1]+1);
   for($class=1;$class<=10;$class++){$rows=all("SELECT r.*,u.name,u.email FROM registrations r JOIN users u ON u.id=r.user_id WHERE r.class_no=? ORDER BY CASE WHEN r.status='active' THEN 0 ELSE 1 END,r.id",[$class]);$position=0;
    foreach($rows as $r){$profile=demoProfile($class,$position++);if(!preg_match('/^sample[0-9]+@example\.test$/D',$r['email'])||!preg_match('/^見本 同窓生[0-9]+$/u',$r['name']))continue;$data=obj($r['data_json']);$before=$data;$data['name']=$profile['name'];$data['kana']=$profile['kana'];if(preg_match('/^見本[0-9]+$/u',$data['display']))$data['display']=$profile['name'];q('UPDATE users SET name=? WHERE id=?',[$data['name'],$r['user_id']]);q('UPDATE registrations SET data_json=? WHERE id=?',[jsonv($data),$r['id']]);logv(null,'架空の見本氏名を更新','registration:'.$r['id'],$before,$data,'例示用の実在しそうな名前へ変更。履歴・申込状態は保持。');$updated++;}

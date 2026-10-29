@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         status,b=request(c,page);m=re.search(rb'name="csrf" value="([a-f0-9]+)"',b);assert m,(status,b[:500]);return m[1].decode()
     def post(c,page,action,values={},files=None):return request(c,page,{'csrf':token(c,page),'action':action,**values},files)
     def login(i):
-        c=client();status,b=post(c,'login','login',{'email':f'sample{i}@example.test','password':'Sample1987!'});assert status==200,(status,b[:100]);return c
+        c=client();status,b=post(c,'login','login',{'email':f'sample{i}@example.test','password':'111111'});assert status==200,(status,b[:100]);return c
     try:
         for _ in range(50):
             try:request(client(),'home');break
@@ -116,7 +116,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(owner,'file&id='+str(pfid));check(s==403,'削除後は幹事の直接画像取得も不可')
         s,b=post(owner,'admin_photos','photo_restore',{'id':pfid,'reason':'復元試験'});check(s==200 and con.execute('select published from private_files where id=?',(pfid,)).fetchone()[0]==0,'誤削除は非公開で復元・自動再掲載なし')
         s,b=request(participant,'file&id='+str(pfid));check(s==403,'非公開復元後も参加者へ配信しない')
-        signup=client();values={'class':1,'name':'見本 太郎','kana':'ミホン タロウ','address':'架空市','phone':'000-0000','email':'kana-form@example.test','email_confirm':'kana-form@example.test','password':'Sample1987!','password_confirm':'Sample1987!','payer':'やまだ　ﾀﾛｳ','display':'','public':'yes'}
+        signup=client();values={'class':1,'name':'見本 太郎','kana':'ミホン タロウ','address':'架空市','phone':'000-0000','email':'kana-form@example.test','email_confirm':'kana-form@example.test','password':'111111','password_confirm':'111111','payer':'やまだ　ﾀﾛｳ','display':'','public':'yes'}
         s,b=post(signup,'register','register',values);check(s==200,'表示名未指定・ひらがな半角名義で架空申込')
         uid=con.execute("select id from users where email='kana-form@example.test'").fetchone()[0]
         import json
@@ -126,8 +126,8 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(anon,'register');check('メールアドレスとパスワードで'.encode() in b and '全員へのお知らせ'.encode() in b,'申込画面にログインと一斉連絡先の案内')
         albumclient=client();s,b=request(albumclient,'gallery&album=1');check(s==200 and b'name="next" value="gallery"' in b,'アルバムからログインすると行先を保持')
         s,b=post(albumclient,'gallery&album=1','login',{'email':'sample3@example.test','password':'wrong','next':'gallery','album':1});check(s==400 and b'name="next" value="gallery"' in b,'失敗後もアルバムへの行先を保持')
-        s,b=post(albumclient,'gallery&album=1','login',{'email':'sample3@example.test','password':'Sample1987!','next':'gallery','album':1});check(s==200 and 'みんなの写真を、ここに。'.encode() in b,'アルバムからログイン成功後にアルバムを表示')
-        safeclient=client();s,b=post(safeclient,'login','login',{'email':'sample3@example.test','password':'Sample1987!','next':'https://evil.example/'});check(s==200 and '申込番号'.encode() in b,'不正なログイン後URLを許可せず本人ページへ')
+        s,b=post(albumclient,'gallery&album=1','login',{'email':'sample3@example.test','password':'111111','next':'gallery','album':1});check(s==200 and 'みんなの写真を、ここに。'.encode() in b,'アルバムからログイン成功後にアルバムを表示')
+        safeclient=client();s,b=post(safeclient,'login','login',{'email':'sample3@example.test','password':'111111','next':'https://evil.example/'});check(s==200 and '申込番号'.encode() in b,'不正なログイン後URLを許可せず本人ページへ')
         s,b=request(participant,'admin_broadcast');check(s==403,'参加者に一斉メール画面を公開しない')
         s,b=post(owner,'admin_broadcast','broadcast_preview',{'subject':'開催変更の見本 <script>','body':'架空の一斉連絡です。','target':'all'});check(s==200 and b'&lt;script&gt;' in b and '内容と対象人数を確認'.encode() in b,'幹事が一斉メールの本文と対象を確認・XSS無害化')
         bid=con.execute('select max(id) from broadcasts').fetchone()[0]
