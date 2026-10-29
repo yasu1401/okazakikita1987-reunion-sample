@@ -7,7 +7,9 @@ if(getenv('REUNION_TEST_DSN'))$config['dsn']=getenv('REUNION_TEST_DSN');
 if(getenv('REUNION_TEST_STORAGE'))$config['storage']=getenv('REUNION_TEST_STORAGE');
 if($config['mode']==='live'&&!is_file(APP_ROOT.'/config.local.php'))throw new RuntimeException('Live requires a local config.');
 $storage=rtrim($config['storage'],'/');if(!is_dir($storage))mkdir($storage,0700,true);
-if($config['mode']==='live'&&str_starts_with(realpath($storage)?:$storage,realpath(APP_ROOT.'/public')))throw new RuntimeException('Storage must be outside public/.');
+$docroot=realpath(!empty($_SERVER['DOCUMENT_ROOT'])?$_SERVER['DOCUMENT_ROOT']:APP_ROOT.'/public');
+$privatePath=realpath($storage)?:$storage;
+if($config['mode']==='live'&&$docroot&&($privatePath===$docroot||str_starts_with($privatePath,$docroot.'/')))throw new RuntimeException('Storage must be outside the document root.');
 $db=new PDO($config['dsn'],$config['db_user'],$config['db_password'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]);
 if($db->getAttribute(PDO::ATTR_DRIVER_NAME)==='sqlite'){$db->exec('PRAGMA foreign_keys=ON');$db->exec('PRAGMA busy_timeout=10000');}
 function q(string $sql,array $args=[]):PDOStatement{global $db;$s=$db->prepare($sql);$s->execute($args);return $s;}

@@ -46,7 +46,7 @@ PHPをインストール済みとは仮定しません。必要：PHP8.2以上�
 
 開発用SQLiteは`var/reunion.sqlite`。再起動しても残ります。`config.example.php`から始まり、独自設定は無視対象の`config.local.php`へコピーします。
 
-この作業でPHP公式ソース8.4.27をSHA256照合のうえ一時フォルダーでビルドしました。実行ファイルは`/tmp/php-8.4.27/sapi/cli/php`。一時ファイルなのでMacの再起動等で失われる可能性があり、通常のPHPインストールの代用にはしません。このビルドにはGD（JPEG/PNG）・mbstring・exif・PDO SQLite/MySQLを有効にしました。画像再エンコード、保護ダウンロード、Shift-JIS取込はローカルHTTPテストで確認しています。MySQL接続自体は未検証です。
+この作業でPHP公式ソース8.4.27をSHA256照合のうえ一時フォルダーでビルドしました。実行ファイルは`/tmp/php-8.4.27/sapi/cli/php`。一時ファイルなのでMacの再起動等で失われる可能性があり、通常のPHPインストールの代用にはしません。このMac用には無視対象の`var/bin/php`にもコピーし、`start.command`から使えるようにしました。キャッシュ内の共有ライブラリーを消した場合は通常のPHP導入が必要です。このビルドにはGD（JPEG/PNG）・mbstring・exif・PDO SQLite/MySQLを有効にしました。画像再エンコード、保護ダウンロード、Shift-JIS取込はローカルHTTPテストで確認しています。MySQL接続自体は未検証です。
 
 ## 確認手順
 
