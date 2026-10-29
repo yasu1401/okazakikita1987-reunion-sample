@@ -43,7 +43,7 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  if(!in_array('album_id',$columns,true))$db->exec('ALTER TABLE private_files ADD COLUMN album_id INTEGER NOT NULL DEFAULT 1');
  $inquiryColumns=$mysql?array_column(all('SHOW COLUMNS FROM inquiries'),'Field'):array_column(all('PRAGMA table_info(inquiries)'),'name');
  if(!in_array('class_no',$inquiryColumns,true))$db->exec('ALTER TABLE inquiries ADD COLUMN class_no INTEGER NULL');
- if(!one('SELECT id FROM albums LIMIT 1'))foreach(['当日の様子','集合写真','懇親会'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
+ if(!one('SELECT id FROM albums LIMIT 1'))foreach(['思い出アルバム'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
 }
 function atomic(callable $fn):mixed{global $db;$db->beginTransaction();try{q('UPDATE app_lock SET version=version+1 WHERE id=1');$r=$fn();$db->commit();return $r;}catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}}
 function logv(?int $actor,string $action,string $entity,mixed $before,mixed $after,string $reason):void{q('INSERT INTO audit_logs (actor_id,action,entity,before_json,after_json,reason,created) VALUES (?,?,?,?,?,?,?)',[$actor,$action,$entity,jsonv($before),jsonv($after),$reason,nowv()]);}
