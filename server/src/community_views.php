@@ -15,7 +15,7 @@ function contactView(?array $u):string {
 function rosterView():string {
     $cl=(int)($_GET['class']??0);if($cl<0||$cl>10)$cl=0;
     $rows=all("SELECT class_no,data_json FROM registrations WHERE status='active' ORDER BY class_no,id");$counts=array_fill(1,10,0);foreach($rows as $r)$counts[(int)$r['class_no']]++;
-    $html='<div class="page-title"><div class="eyebrow">CLASSMATES</div><h1>'.($cl?'3年'.$cl.'組の、懐かしい顔ぶれ。':'みんなの参加予定').'</h1><p>掲載に同意された表示名を掲載します。住所・電話・メールは表示しません。</p></div><div class="panel"><div class="section-head"><h2>'.($cl?'3年'.$cl.'組':'全クラス').'の参加予定 <span class="amount">'.($cl?$counts[$cl]:count($rows)).'</span> 人</h2><p>全体の参加予定：'.count($rows).'人</p></div><div class="class-tabs"><a href="?page=classes" class="'.(!$cl?'active':'').'">全クラス</a>';
+    $html='<div class="page-title"><div class="eyebrow">CLASSMATES</div><h1>'.($cl?'3年'.$cl.'組の、懐かしい顔ぶれ。':'みんなの参加予定').'</h1><p>現在の氏名はすべて架空の見本です。掲載に同意された表示名を掲載します。住所・電話・メールは表示しません。</p></div><div class="panel"><div class="section-head"><h2>'.($cl?'3年'.$cl.'組':'全クラス').'の参加予定 <span class="amount">'.($cl?$counts[$cl]:count($rows)).'</span> 人</h2><p>全体の参加予定：'.count($rows).'人</p></div><div class="class-tabs"><a href="?page=classes" class="'.(!$cl?'active':'').'">全クラス</a>';
     for($i=1;$i<=10;$i++)$html.='<a href="?page=classes&amp;class='.$i.'" class="'.($cl===$i?'active':'').'">3年'.$i.'組 <small>'.$counts[$i].'人</small></a>';
     $html.='</div><div class="roster">';$shown=0;
     foreach($rows as $r){$d=obj($r['data_json']);if(!$d['public']||($cl&&(int)$r['class_no']!==$cl))continue;$shown++;$html.='<div class="name-card"><small>3年'.$r['class_no'].'組</small><strong>'.h($d['display']).'</strong></div>';}
