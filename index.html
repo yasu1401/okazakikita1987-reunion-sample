@@ -49,47 +49,45 @@
  .hero-art .art-note{font-size:9px;right:6px;bottom:12px}
 }
 
-/* A clear, comfortably sized mobile menu button on both versions. */
-@media(max-width:760px){
- header .menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:104px;min-height:44px;padding:9px 12px;border:2px solid #14594d;border-radius:9px;background:#14594d;color:#fffefa;font-size:14px;line-height:1.25;font-weight:750;box-shadow:0 3px 8px #14594d24;flex:none}
- header .menu-toggle:hover{background:#0b433a}
- header .menu-toggle[aria-expanded=true]{background:#fffefa;color:#14594d}
- header .menu-symbol{font-size:20px;line-height:1;min-width:20px;text-align:center}
- header #mainNav{display:none;width:100%;padding:14px 0 0;gap:8px}
- header #mainNav.open{display:flex}
- header #mainNav>a{min-height:44px;display:inline-flex;align-items:center;padding:9px 12px;font-size:14px}
-}
-@media(max-width:360px){header .menu-toggle{min-width:100px;padding:9px 10px;font-size:14px;gap:7px}}
-@media(max-width:360px){header{gap:10px;padding:14px 16px}header .brand{gap:8px}header .brand img{width:32px;height:32px}header .brand span{font-size:10px}header .brand b{font-size:8px}}
-
-/* Consistent account strip, directly below the main navigation. */
-.session-bar{border-bottom:1px solid #dadfd1;background:#fffdf7}
+/* Permanent navigation, with quiet account controls at the upper right. */
+header{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:16px 24px}
+header .brand{grid-column:1;grid-row:1}
+header .session-bar{grid-column:2;grid-row:1;justify-self:end;min-width:0;max-width:100%}
 .session-bar[hidden]{display:none}
-.session-content{max-width:1200px;margin:auto;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}
-.session-account{min-width:0}
-.session-account small{display:block;font-size:11px;color:#536451;line-height:1.5}
-.session-account>span{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.session-account strong{font-size:14px;overflow-wrap:anywhere}
-.session-role{font-size:11px;line-height:1.5;border:1px solid #b6cbbb;border-radius:4px;padding:2px 7px;color:#14594d;background:#eef4eb}
+.session-content{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.session-account{min-width:0;text-align:right;color:#627466}
+.session-account small{display:block;font-size:10px;line-height:1.4}
+.session-account>span{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap}
+.session-account strong{font-size:12px;font-weight:500;overflow-wrap:anywhere}
+.session-role{font-size:10px;line-height:1.5;color:#627466}
 .session-content form{margin:0;flex:none}
-.session-logout{min-height:44px;padding:9px 16px;font-size:13px;white-space:nowrap;flex:none}
-@media(max-width:760px){.session-content{padding:10px 20px;gap:10px}.session-account strong{font-size:13px}.session-account>span{gap:6px}.session-logout{padding:9px 12px;font-size:12px}}
-@media print{.session-bar{display:none}}
+.session-logout,.session-login{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 10px;border:1px solid #cbd4c6;border-radius:5px;background:#f0f3ec;color:#526554;font-size:11px;font-weight:500;line-height:1.4;white-space:nowrap;box-shadow:none;flex:none}
+.session-logout:hover,.session-login:hover{background:#e2ebdc;color:#254b37;transform:none}
+header #mainNav{grid-column:1/-1;grid-row:2;display:flex;width:100%;justify-content:center;flex-wrap:wrap;gap:8px 20px;padding:10px 0 0;border-top:1px solid #e1e4d8}
+header #mainNav>a{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 12px;font-size:13px}
 #mainNav a[hidden]{display:none!important}
+@media(max-width:760px){
+ header{padding:14px 20px;gap:13px 12px}
+ header .brand{gap:9px}
+ header .brand span{font-size:10px}
+ header .brand b{font-size:8px}
+ header .brand img{width:34px;height:34px}
+ .session-content{gap:7px}
+ .session-account strong{font-size:11px;max-width:88px}
+ .session-account>span{gap:3px}
+ .session-account small,.session-role{font-size:9px}
+ .session-logout,.session-login{min-height:36px;padding:7px 8px;font-size:10px}
+ header #mainNav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:12px}
+ header #mainNav>a{min-height:38px;padding:7px 3px;font-size:12px;border:1px solid #e0e4d8;border-radius:5px;background:#fffdf7;color:#345745;line-height:1.5}
+ header #mainNav>a.nav-cta{grid-column:1/-1;background:#e7eee0;border-color:#c5d2ba;color:#244f38}
+ header #mainNav>a.active{background:#edf2e5;border-color:#b9cba9;color:#254f36}
+}
+@media(max-width:360px){header{padding:12px 14px;gap:12px 8px}header .brand{gap:6px}header .brand img{width:28px;height:28px}header .brand span{font-size:9px}header .brand b{font-size:7px}.session-content{gap:5px}.session-account strong{max-width:65px;font-size:10px}.session-account>span{display:block}.session-role{display:block}header #mainNav>a{font-size:11px}}
+@media print{.session-bar{display:none}}
 </style></head>
 <body><a class="skip" href="#main">本文へ</a><div class="demo-strip"><span class="demo-dot"></span> 同窓生・幹事向け 操作サンプル <span class="strip-desktop">／ 架空データのみ・本番の参加受付ではありません</span><button id="demoHelp" aria-label="サンプルの使い方を開く">使い方 ↗</button></div>
-<header><a class="brand" href="#/" aria-label="同窓会トップ"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiMxNDU5NGQiLz48cGF0aCBkPSJNMTggNDZWMThtMyAxNkw0MCAxOE0yNCAzMWwyMCAxNSIgc3Ryb2tlPSIjZjhmNWVkIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSI0NSIgY3k9IjE3IiByPSI1IiBmaWxsPSIjZDk2NTNiIi8+PC9zdmc+Cg==" alt="" width="40" height="40"><span>OKAZAKI KITA <b>CLASS OF 1987</b></span></a><button type="button" class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="mainNav"><span class="menu-symbol" aria-hidden="true">☰</span><span class="menu-label">メニュー</span></button><nav id="mainNav" aria-label="メインメニュー"><a href="#/">ホーム</a><a href="#/classes">みんなの参加予定</a><a href="#/gallery">フォトアルバム</a><a href="#/my">申込確認</a><a href="#/admin" class="admin-link">幹事画面 <small>DEMO</small></a><a href="#/register" class="nav-cta">参加申込を試す ↗</a></nav></header>
-<main id="main" tabindex="-1"></main><footer><div class="footer-top"><a class="brand" href="#/"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiMxNDU5NGQiLz48cGF0aCBkPSJNMTggNDZWMThtMyAxNkw0MCAxOE0yNCAzMWwyMCAxNSIgc3Ryb2tlPSIjZjhmNWVkIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSI0NSIgY3k9IjE3IiByPSI1IiBmaWxsPSIjZDk2NTNiIi8+PC9zdmc+Cg==" alt="" width="38" height="38"><span>OKAZAKI KITA <b>CLASS OF 1987</b></span></a><p>久しぶり、の先にある時間を。</p></div><div class="footer-bottom"><span>岡崎北高等学校1987年卒同窓会 · 幹事会サンプル</span><span>学校公式サイトではありません。掲載人物・入金は架空です。校舎写真以外の初期画像はイラスト見本です。</span><button id="footerHelp">このサンプルについて</button></div></footer><div id="toast" role="status" aria-live="polite"></div><dialog id="modal"><button id="closeModal" class="modal-close" aria-label="閉じる">×</button><div id="modalBody"></div></dialog><script>/* Shared mobile navigation for the sample and PHP preview. */
-(function(){'use strict';
-const button=document.getElementById('menuToggle'),nav=document.getElementById('mainNav');
-if(!button||!nav)return;
-function set(open){nav.classList.toggle('open',open);button.setAttribute('aria-expanded',String(open));button.querySelector('.menu-symbol').textContent=open?'×':'☰';button.querySelector('.menu-label').textContent=open?'閉じる':'メニュー';}
-button.addEventListener('click',()=>set(button.getAttribute('aria-expanded')!=='true'));
-nav.addEventListener('click',ev=>{if(ev.target.closest('a'))set(false);});
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&button.getAttribute('aria-expanded')==='true'){set(false);button.focus();}});
-window.ReunionMenu={set};
-})();
-</script><script>/* Shared registration helpers; no network or external service. */
+<header><a class="brand" href="#/" aria-label="同窓会トップ"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiMxNDU5NGQiLz48cGF0aCBkPSJNMTggNDZWMThtMyAxNkw0MCAxOE0yNCAzMWwyMCAxNSIgc3Ryb2tlPSIjZjhmNWVkIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSI0NSIgY3k9IjE3IiByPSI1IiBmaWxsPSIjZDk2NTNiIi8+PC9zdmc+Cg==" alt="" width="40" height="40"><span>OKAZAKI KITA <b>CLASS OF 1987</b></span></a><nav id="mainNav" aria-label="メインメニュー"><a href="#/">ホーム</a><a href="#/classes">みんなの参加予定</a><a href="#/gallery">フォトアルバム</a><a href="#/my">申込確認</a><a href="#/admin" class="admin-link">幹事画面 <small>DEMO</small></a><a href="#/register" class="nav-cta">参加申込を試す ↗</a></nav></header>
+<main id="main" tabindex="-1"></main><footer><div class="footer-top"><a class="brand" href="#/"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMzIiIGZpbGw9IiMxNDU5NGQiLz48cGF0aCBkPSJNMTggNDZWMThtMyAxNkw0MCAxOE0yNCAzMWwyMCAxNSIgc3Ryb2tlPSIjZjhmNWVkIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSI0NSIgY3k9IjE3IiByPSI1IiBmaWxsPSIjZDk2NTNiIi8+PC9zdmc+Cg==" alt="" width="38" height="38"><span>OKAZAKI KITA <b>CLASS OF 1987</b></span></a><p>久しぶり、の先にある時間を。</p></div><div class="footer-bottom"><span>岡崎北高等学校1987年卒同窓会 · 幹事会サンプル</span><span>学校公式サイトではありません。掲載人物・入金は架空です。校舎写真以外の初期画像はイラスト見本です。</span><button id="footerHelp">このサンプルについて</button></div></footer><div id="toast" role="status" aria-live="polite"></div><dialog id="modal"><button id="closeModal" class="modal-close" aria-label="閉じる">×</button><div id="modalBody"></div></dialog><script>/* Shared registration helpers; no network or external service. */
 (function(root){'use strict';
 function fold(value){return String(value??'').normalize('NFKC').replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)).replace(/[‐‑‒–—―−]/g,'-').replace(/\s+/g,' ').trim();}
 function payer(value){const v=fold(value);if(!v||v.length>200||!/^[-ァ-ヺー・0-9() .]+$/u.test(v))throw new Error('振込名義はカタカナで入力してください（数字・空白・括弧・ハイフンも使用できます）。');return v;}
@@ -208,7 +206,7 @@ function renderLogs(){const el=document.querySelector('#logTable');if(!el)return
 function settingsPage(){const s=state.settings;return adminShell('settings','<div class="panel"><h3>大会案内と、個別の期限設定</h3><div class="notice">開催日・会費は未定です。以下の期限・会費・判定日はすべて操作確認用の仮値です。</div><form id="settingsForm"><div class="grid-2">'+field('dateLabel','案内に表示する開催日',s.dateLabel)+field('venue','会場',s.venue)+field('fee','サンプル会費（円）',s.fee,'number')+field('capacity','参加定員（会場上限）',s.capacity,'number')+field('classSize','参加状況グラフの基準人数（1クラス・仮）',s.classSize||47,'number')+field('open','申込受付開始日（仮）',s.open,'date')+field('registration','参加申込期限（仮）',s.registration,'date')+field('payment','入金期限（仮）',s.payment,'date')+field('change','内容修正期限（仮）',s.change,'date')+field('cancel','キャンセル期限（仮）',s.cancel,'date')+field('photoEnd','写真公開終了日（仮）',s.photoEnd,'date')+field('clock','期限判定用の日付（デモ専用）',s.clock,'date')+'</div><p class="mini-note">各期限は独立しています。期限当日の日本時間23:59:59まで、という本番仕様に対し、サンプルではこの判定日と日付で比較します。会費変更は新規申込だけに適用し、既存申込の請求額を上書きしません。</p>'+field('reason','設定変更の理由')+'<p id="formError" class="error-text" role="alert"></p><button class="btn">設定と変更ログを保存</button></form></div><div class="panel"><h3>サンプルのバックアップ・初期化</h3><p class="muted">端末内の操作内容をJSONで保存できます。実際の個人情報は保存しないでください。</p><div class="button-row"><button class="btn btn-outline" data-action="backup">この端末のデモをバックアップ ↓</button><label class="btn btn-outline">バックアップを復元<input id="restoreFile" type="file" accept=".json" hidden></label><button class="btn btn-danger" data-action="reset">架空データへ初期化</button></div></div>');}
 function photosAdmin(){return adminShell('photos','<div class="panel"><h3>写真を登録する操作を試す</h3><p class="muted">見本や公開可能なテスト画像だけを使ってください。画像は送信されず、このブラウザー内に保存します。</p><label class="file-drop">JPEG・PNGのテスト画像を追加<input id="photoFiles" type="file" accept="image/jpeg,image/png" multiple></label><p class="mini-note">1回4枚、1枚5MB・2000万画素まで。向きを補正して最大1600pxのJPEGにし、EXIFを除いて保存します。実際の同窓会写真の公開機能は本番で別途実装します。</p></div><div class="panel"><h3>アルバムの公開・非公開</h3>'+table(['見本','タイトル','アルバム','状態','操作'],state.photos.map(p=>['<img class="upload-preview" src="'+esc(p.src)+'" alt="'+esc(p.title)+'">',esc(p.title),esc(p.album),p.published?'公開':'非公開','<button class="link" data-action="toggle-photo" data-id="'+p.id+'">'+(p.published?'非公開にする':'公開する')+'</button>']))+'</div>');}
 function mailPage(){return adminShell('mail','<div class="panel"><h3>開発メール（すべて未送信）</h3><p class="muted">申込・変更・入金確認に伴って記録するサンプルです。メールサーバーへの接続はありません。</p>'+(state.mail.length?state.mail.slice().reverse().map(m=>'<details><summary>'+esc(m.subject)+' / '+esc(state.people.find(p=>p.id===m.personId)?.number||'')+'</summary><p class="mini-note">'+esc(date(m.at))+'</p><pre>'+esc(m.body)+'</pre></details>').join(''):'<p class="empty">申込や入金を操作すると、ここに通知の見本が記録されます。</p>')+'</div>');}
-function route(){const path=(location.hash.slice(1)||'/').split('/').filter(Boolean),part=path[0]||'';window.ReunionMenu.set(false);if(part!=='register'&&part!=='confirm'&&part!=='complete')editId=null;let body;
+function route(){const path=(location.hash.slice(1)||'/').split('/').filter(Boolean),part=path[0]||'';if(part!=='register'&&part!=='confirm'&&part!=='complete')editId=null;let body;
  switch(part){case '':body=home();break;case 'classes':body=classes(path[1]);break;case 'register':editId=path[1]&&state.people.some(p=>p.id===Number(path[1]))?Number(path[1]):null;body=registerPage();break;case 'confirm':body=confirmPage();break;case 'complete':body=completePage(path[1]);break;case 'my':body=myPage();break;case 'gallery':body=galleryPage();break;case 'photo':body=photoPage(path[1]);break;case 'admin':switch(path[1]||''){case '':body=adminPage();break;case 'bank':body=bankPage();break;case 'logs':body=logsPage();break;case 'settings':body=settingsPage();break;case 'photos':body=photosAdmin();break;case 'mail':body=mailPage();break;default:body=adminPage();}break;default:body=frame(title('NOT FOUND','ページが見つかりません。')+'<a class="btn" href="#/">トップへ</a>');}
  main.innerHTML=body;document.querySelectorAll('#mainNav>a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#/'+part));renderPeople();renderBank();renderLogs();window.scrollTo(0,0);document.title=(part==='admin'?'幹事画面｜':part==='classes'?'参加予定名簿｜':part==='gallery'?'アルバム｜':'')+'岡崎北高等学校1987年卒同窓会【サンプル】';if(!storageOK)toast('保存機能が制限されています。この画面内でのみお試しいただけます。');}
 function openModal(html){document.querySelector('#modalBody').innerHTML=html;document.querySelector('#modal').showModal();}
@@ -389,8 +387,8 @@ route();
 </script><script>/* The same visible logout location for participants, organizers and administrators. */
 const sessionBaseRoute=route;
 const sessionBar=document.createElement('div');sessionBar.className='session-bar';sessionBar.setAttribute('aria-label','ログイン中のアカウント');sessionBar.hidden=true;
-document.querySelector('header').insertAdjacentElement('afterend',sessionBar);
-function renderSessionBar(){const p=current();sessionBar.hidden=!p;document.querySelectorAll('header a[href="#/register"]').forEach(a=>a.hidden=!!p);if(!p){sessionBar.replaceChildren();return;}const role={owner:'管理者',organizer:'幹事',participant:'参加者'}[p.role]||'参加者';sessionBar.innerHTML='<div class="session-content"><div class="session-account"><small>ログイン中</small><span><strong>'+esc(p.name)+'</strong><span class="session-role">'+role+'</span></span></div><button type="button" class="btn btn-outline session-logout" data-feature="logout">ログアウト</button></div>';}
+document.querySelector('header').insertBefore(sessionBar,document.getElementById('mainNav'));
+function renderSessionBar(){const p=current();sessionBar.setAttribute('aria-label',p?'ログイン中のアカウント':'アカウント');sessionBar.hidden=!p;document.querySelectorAll('header a[href="#/register"]').forEach(a=>a.hidden=!!p);if(!p){sessionBar.hidden=false;sessionBar.innerHTML='<a class="session-login" href="#/my">ログイン</a>';return;}const role={owner:'管理者',organizer:'幹事',participant:'参加者'}[p.role]||'参加者';sessionBar.innerHTML='<div class="session-content"><div class="session-account"><small>ログイン中</small><span><strong>'+esc(p.name)+'</strong><span class="session-role">'+role+'</span></span></div><button type="button" class="btn btn-outline session-logout" data-feature="logout">ログアウト</button></div>';}
 route=function(){if(current()&&/^\/register\/?$/.test(location.hash.slice(1)))location.hash='/my';renderSessionBar();sessionBaseRoute();if(current())main.querySelectorAll('a[href="#/register"]').forEach(a=>{a.href='#/my';a.textContent='申込内容を確認 ↗';});main.querySelectorAll('[data-feature="logout"]').forEach(b=>b.remove());};
 window.removeEventListener('hashchange',sessionBaseRoute);window.addEventListener('hashchange',route);route();
 </script></body></html>

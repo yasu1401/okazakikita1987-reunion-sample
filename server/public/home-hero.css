@@ -28,30 +28,38 @@
  .hero-art .art-note{font-size:9px;right:6px;bottom:12px}
 }
 
-/* A clear, comfortably sized mobile menu button on both versions. */
-@media(max-width:760px){
- header .menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:104px;min-height:44px;padding:9px 12px;border:2px solid #14594d;border-radius:9px;background:#14594d;color:#fffefa;font-size:14px;line-height:1.25;font-weight:750;box-shadow:0 3px 8px #14594d24;flex:none}
- header .menu-toggle:hover{background:#0b433a}
- header .menu-toggle[aria-expanded=true]{background:#fffefa;color:#14594d}
- header .menu-symbol{font-size:20px;line-height:1;min-width:20px;text-align:center}
- header #mainNav{display:none;width:100%;padding:14px 0 0;gap:8px}
- header #mainNav.open{display:flex}
- header #mainNav>a{min-height:44px;display:inline-flex;align-items:center;padding:9px 12px;font-size:14px}
-}
-@media(max-width:360px){header .menu-toggle{min-width:100px;padding:9px 10px;font-size:14px;gap:7px}}
-@media(max-width:360px){header{gap:10px;padding:14px 16px}header .brand{gap:8px}header .brand img{width:32px;height:32px}header .brand span{font-size:10px}header .brand b{font-size:8px}}
-
-/* Consistent account strip, directly below the main navigation. */
-.session-bar{border-bottom:1px solid #dadfd1;background:#fffdf7}
+/* Permanent navigation, with quiet account controls at the upper right. */
+header{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:16px 24px}
+header .brand{grid-column:1;grid-row:1}
+header .session-bar{grid-column:2;grid-row:1;justify-self:end;min-width:0;max-width:100%}
 .session-bar[hidden]{display:none}
-.session-content{max-width:1200px;margin:auto;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}
-.session-account{min-width:0}
-.session-account small{display:block;font-size:11px;color:#536451;line-height:1.5}
-.session-account>span{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.session-account strong{font-size:14px;overflow-wrap:anywhere}
-.session-role{font-size:11px;line-height:1.5;border:1px solid #b6cbbb;border-radius:4px;padding:2px 7px;color:#14594d;background:#eef4eb}
+.session-content{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.session-account{min-width:0;text-align:right;color:#627466}
+.session-account small{display:block;font-size:10px;line-height:1.4}
+.session-account>span{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap}
+.session-account strong{font-size:12px;font-weight:500;overflow-wrap:anywhere}
+.session-role{font-size:10px;line-height:1.5;color:#627466}
 .session-content form{margin:0;flex:none}
-.session-logout{min-height:44px;padding:9px 16px;font-size:13px;white-space:nowrap;flex:none}
-@media(max-width:760px){.session-content{padding:10px 20px;gap:10px}.session-account strong{font-size:13px}.session-account>span{gap:6px}.session-logout{padding:9px 12px;font-size:12px}}
-@media print{.session-bar{display:none}}
+.session-logout,.session-login{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 10px;border:1px solid #cbd4c6;border-radius:5px;background:#f0f3ec;color:#526554;font-size:11px;font-weight:500;line-height:1.4;white-space:nowrap;box-shadow:none;flex:none}
+.session-logout:hover,.session-login:hover{background:#e2ebdc;color:#254b37;transform:none}
+header #mainNav{grid-column:1/-1;grid-row:2;display:flex;width:100%;justify-content:center;flex-wrap:wrap;gap:8px 20px;padding:10px 0 0;border-top:1px solid #e1e4d8}
+header #mainNav>a{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 12px;font-size:13px}
 #mainNav a[hidden]{display:none!important}
+@media(max-width:760px){
+ header{padding:14px 20px;gap:13px 12px}
+ header .brand{gap:9px}
+ header .brand span{font-size:10px}
+ header .brand b{font-size:8px}
+ header .brand img{width:34px;height:34px}
+ .session-content{gap:7px}
+ .session-account strong{font-size:11px;max-width:88px}
+ .session-account>span{gap:3px}
+ .session-account small,.session-role{font-size:9px}
+ .session-logout,.session-login{min-height:36px;padding:7px 8px;font-size:10px}
+ header #mainNav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:12px}
+ header #mainNav>a{min-height:38px;padding:7px 3px;font-size:12px;border:1px solid #e0e4d8;border-radius:5px;background:#fffdf7;color:#345745;line-height:1.5}
+ header #mainNav>a.nav-cta{grid-column:1/-1;background:#e7eee0;border-color:#c5d2ba;color:#244f38}
+ header #mainNav>a.active{background:#edf2e5;border-color:#b9cba9;color:#254f36}
+}
+@media(max-width:360px){header{padding:12px 14px;gap:12px 8px}header .brand{gap:6px}header .brand img{width:28px;height:28px}header .brand span{font-size:9px}header .brand b{font-size:7px}.session-content{gap:5px}.session-account strong{max-width:65px;font-size:10px}.session-account>span{display:block}.session-role{display:block}header #mainNav>a{font-size:11px}}
+@media print{.session-bar{display:none}}
