@@ -27,7 +27,7 @@ function contactsForPerson(array $p):string {
     return '<section class="panel"><div class="eyebrow">YOUR CLASS ORGANIZERS</div><h2>3年'.$cl.'組のクラス幹事</h2><div class="roster">'.$names.'</div><p>ご連絡は<a href="?page=home#contact">問い合わせフォーム</a>をご利用ください。</p></section>';
 }
 function contactsAdminView():string {
-    $cl=(int)($_GET['class']??1);$cl=max(1,min(10,$cl));$html='<div class="page-title"><div class="eyebrow">CLASS ORGANIZERS</div><h1>クラス幹事を、ご案内。</h1><p>代表幹事が各クラス最大3名を指定します。表示の指定だけでは管理権限は増えません。</p></div><div class="class-tabs">';
+    $cl=(int)($_GET['class']??1);$cl=max(1,min(10,$cl));$html='<div class="page-title"><div class="eyebrow">CLASS ORGANIZERS</div><h1>クラス幹事を、ご案内。</h1><p>管理者が各クラス最大3名を指定します。表示の指定だけでは管理権限は増えません。</p></div><div class="class-tabs">';
     for($i=1;$i<=10;$i++)$html.='<a href="?page=admin_contacts&amp;class='.$i.'" class="'.($cl===$i?'active':'').'">3年'.$i.'組</a>';
     $html.='</div><div class="panel"><h2>3年'.$cl.'組</h2>';
     foreach(all('SELECT c.*,u.name FROM class_contacts c JOIN users u ON u.id=c.user_id WHERE c.class_no=? ORDER BY c.position_no,c.id',[$cl]) as $c)$html.='<div class="contact-assignment"><strong>'.h($c['name']).'</strong> ／ 表示順 '.$c['position_no'].form('contact_remove',hidden('id',$c['id']).reasons().button('表示指定を解除')).'</div>';

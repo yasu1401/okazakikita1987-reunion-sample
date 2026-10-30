@@ -47,7 +47,7 @@ function replyInquiry(array $u,array $d):int {
     logv((int)$u['id'],'問い合わせ返信を記録','inquiry:'.$id,null,['reply_id'=>$rid,'outbox_status'=>$status],'問い合わせに入力された宛先への返信');return $rid;
 }
 function setClassContact(array $u,array $d):void {
-    requirev($u['role']==='owner','クラス幹事の指定は代表幹事が行います。');$cl=(int)($d['class']??0);$uid=(int)($d['user_id']??0);$position=(int)($d['position']??1);
+    requirev($u['role']==='owner','クラス幹事の指定は管理者が行います。');$cl=(int)($d['class']??0);$uid=(int)($d['user_id']??0);$position=(int)($d['position']??1);
     requirev($cl>=1&&$cl<=10&&$position>=1&&$position<=3,'クラスと表示順（1〜3）を確認してください。');
     $r=registrationFor($uid);requirev($r&&(int)$r['class_no']===$cl&&$r['status']==='active','同じクラスの参加予定者から選んでください。');
     requirev(!one('SELECT id FROM class_contacts WHERE class_no=? AND user_id=?',[$cl,$uid]),'すでに指定されています。');
@@ -56,7 +56,7 @@ function setClassContact(array $u,array $d):void {
     logv((int)$u['id'],'クラス幹事表示を指定','class:'.$cl,null,['user_id'=>$uid,'position'=>$position],reasonv($d));
 }
 function removeClassContact(array $u,array $d):void {
-    requirev($u['role']==='owner','代表幹事だけが解除できます。');$c=one('SELECT * FROM class_contacts WHERE id=?',[(int)($d['id']??0)]);requirev((bool)$c,'指定がありません。');
+    requirev($u['role']==='owner','管理者だけが解除できます。');$c=one('SELECT * FROM class_contacts WHERE id=?',[(int)($d['id']??0)]);requirev((bool)$c,'指定がありません。');
     q('DELETE FROM class_contacts WHERE id=?',[$c['id']]);logv((int)$u['id'],'クラス幹事表示を解除','class:'.$c['class_no'],$c,null,reasonv($d));
 }
 function classContacts(int $cl):array {

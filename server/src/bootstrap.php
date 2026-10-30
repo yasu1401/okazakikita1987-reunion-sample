@@ -58,7 +58,7 @@ function logv(?int $actor,string $action,string $entity,mixed $before,mixed $aft
 function setting():array{return obj(one('SELECT data_json FROM settings WHERE id=1')['data_json']);}
 function deadline(string $key):void{$s=setting();requirev(date('Y-m-d')<=$s[$key],'操作期限を過ぎています。幹事へご連絡ください。');if($key==='registration')requirev(date('Y-m-d')>=$s['open'],'受付開始前です。');}
 function actor():?array{return isset($_SESSION['uid'])?one('SELECT id,email,role,name FROM users WHERE id=?',[(int)$_SESSION['uid']]):null;}
-function auth(bool $admin=false,bool $owner=false):array{$u=actor();requirev((bool)$u,'ログインが必要です。');if($admin)requirev(in_array($u['role'],['organizer','owner'],true),'幹事権限が必要です。');if($owner)requirev($u['role']==='owner','代表幹事の権限が必要です。');return $u;}
+function auth(bool $admin=false,bool $owner=false):array{$u=actor();requirev((bool)$u,'ログインが必要です。');if($admin)requirev(in_array($u['role'],['organizer','owner'],true),'幹事権限が必要です。');if($owner)requirev($u['role']==='owner','管理者の権限が必要です。');return $u;}
 function passwordv(string $pw,bool $sample=false):void{global $config;if($sample&&$config['mode']==='development'&&$pw==='111111')return;requirev((bool)preg_match('/^.{8,}$/us',$pw)&&strlen($pw)<=72,'パスワードは8文字以上、UTF-8で72バイト以内にしてください。');}
 function reasonv(array $d):string{$r=trim((string)($d['reason']??''));requirev($r!==''&&strlen($r)<=3000,'処理理由を入力してください。');return $r;}
 function moneyv(mixed $v):int{$s=str_replace([',','円',' '],'',(string)$v);requirev((bool)preg_match('/^[0-9]+$/D',$s)&&strlen($s)<=9,'金額は0〜100,000,000円の整数にしてください。');$n=(int)$s;requirev($n<=100000000,'金額が上限を超えています。');return $n;}
