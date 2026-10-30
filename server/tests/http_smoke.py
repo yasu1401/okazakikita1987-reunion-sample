@@ -206,5 +206,16 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         check(b.count('>内容変更期限</dt>'.encode())==1 and b.count('>キャンセル期限</dt>'.encode())==1,'入金済みは変更・キャンセル期限を各一回表示')
         srv.terminate();srv.wait();srv=subprocess.Popen([php,'-d','session.upload_progress.enabled=0','-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         time.sleep(.3);s,b=request(login(1),'admin_accounting');check(s==200 and '架空店'.encode() in b,'再起動後も経費とDBが残る')
+        # Expired operations should explain the next step, while server checks remain enforced.
+        saved_settings=json.loads(con.execute('SELECT data_json FROM settings WHERE id=1').fetchone()[0])
+        expired={**saved_settings,'change':'2000-01-01','cancel':'2000-01-01'}
+        con.execute('UPDATE settings SET data_json=? WHERE id=1',(json.dumps(expired),));con.commit()
+        s,b=request(fresh,'my')
+        check(s==200 and b'href="?page=edit"' not in b and b'name="action" value="cancel"' not in b and '内容変更の受付期限を過ぎています'.encode() in b and 'キャンセルの受付期限を過ぎています'.encode() in b and b'?page=home#contact' in b,'期限後は操作ボタンの代わりに幹事への相談を案内')
+        s,b=post(fresh,'my','cancel',{'reason':'期限後の直接送信テスト'})
+        check(s==400,'期限後は画面外からの欠席申請も拒否')
+        con.execute('UPDATE settings SET data_json=? WHERE id=1',(json.dumps(saved_settings),));con.commit()
+        s,b=request(fresh,'my')
+        check(b'href="?page=edit"' in b and b'name="action" value="cancel"' in b,'期限内は変更・欠席申請の操作を表示')
         print('ALL',n,'HTTP CHECKS PASSED')
     finally:srv.terminate();srv.wait()

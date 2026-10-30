@@ -6,7 +6,15 @@ const API={fold,payer};root.FormAssist=API;if(typeof module!=='undefined'&&modul
 if(typeof document==='undefined')return;
 const states=new WeakMap();
 function init(form){if(states.has(form))return states.get(form);const name=form.querySelector('[name=name]'),display=form.querySelector('[name=display]'),pay=form.querySelector('[name=payer]');if(!name||!display||!pay)return null;const state={name,display,pay,auto:!display.value||display.value===name.value,last:name.value};states.set(form,state);if(!display.value&&name.value)display.value=name.value;pay.lang='ja';pay.setAttribute('spellcheck','false');pay.setAttribute('autocomplete','off');pay.placeholder='例：ヤマダ タロウ';return state;}
-function scan(){document.querySelectorAll('form').forEach(init);}
+function scan(){document.querySelectorAll('form').forEach(form=>{
+init(form);
+// Input hints only: do not change stored values or validation rules.
+for(const el of form.querySelectorAll('input')){
+ if(el.name==='phone'){el.type='tel';el.setAttribute('inputmode','tel');el.autocomplete='tel';}
+ if(el.name==='postal')el.autocomplete='postal-code';
+ if(el.type==='email'){el.autocomplete='email';el.setAttribute('autocapitalize','none');el.setAttribute('spellcheck','false');}
+}
+});}
 function normalize(state){try{state.pay.value=payer(state.pay.value);state.pay.setCustomValidity('');return true;}catch(e){state.pay.setCustomValidity(e.message);return false;}}
 document.addEventListener('input',ev=>{const s=ev.target.form&&init(ev.target.form);if(!s)return;if(ev.target===s.display){s.auto=s.display.value===s.name.value;return;}if(ev.target===s.name&&(s.auto||s.display.value===s.last)){s.display.value=s.name.value;s.auto=true;s.last=s.name.value;}if(ev.target===s.pay)s.pay.setCustomValidity('');});
 document.addEventListener('blur',ev=>{const s=ev.target.form&&init(ev.target.form);if(s&&ev.target===s.pay&&s.pay.value)normalize(s);},true);
