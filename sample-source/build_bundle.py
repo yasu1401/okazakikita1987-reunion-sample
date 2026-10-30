@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parent
 src=root/'dist';out=root/'github-pages';out.mkdir(exist_ok=True)
 s=(src/'index.html').read_text()
 s=s.replace('<link rel="stylesheet" href="style.css">','<style>'+(src/'style.css').read_text()+'</style>')
-s=s.replace('<link rel="stylesheet" href="home-hero.css?v=20261030-nav-always">','<style>'+(src/'home-hero.css').read_text()+'</style>')
+s=s.replace('<link rel="stylesheet" href="home-hero.css?v=20261030-roster-role">','<style>'+(src/'home-hero.css').read_text()+'</style>')
 for name in ['form-assist.js','core.js','app.js','finance.js','features.js','community-core.js','community.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js','session-ui.js']:
     code=(src/name).read_text().replace('</script','<\\/script')
     s=s.replace('<script src="'+name+'"></script>','<script>'+code+'</script>')
