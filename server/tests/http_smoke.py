@@ -138,6 +138,10 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=post(owner,'admin_broadcast&id='+str(bid),'broadcast_cancel',{'id':bid,'reason':'見本停止'});check(s==200 and con.execute("select count(*) from broadcast_messages where broadcast_id=? and status='cancelled'",(bid,)).fetchone()[0]==expected,'一斉メール停止と宛先別状態を保存')
         dry=subprocess.run([php,str(root/'scripts/mail_queue.php')],env=env,capture_output=True);check(dry.returncode==0 and '実送信なし'.encode() in dry.stdout,'メール処理は指定なしでは表示だけ')
         refused=subprocess.run([php,str(root/'scripts/mail_queue.php'),'--send'],env=env,capture_output=True);check(refused.returncode!=0,'開発設定では送信指定も拒否')
+        s,b=request(participant,'home');check(b'href="?page=register"' not in b and '申込内容を確認'.encode() in b,'ログイン中は新規申込リンクを非表示・確認へ切替')
+        s,b=request(participant,'register');check(s==200 and '申込番号'.encode() in b and b'name="action" value="register"' not in b,'ログイン中の申込URLは本人の申込確認へ')
+        count=con.execute('select count(*) from users').fetchone()[0]
+        s,b=request(participant,'register',{'csrf':token(participant,'my'),'action':'register',**values,'email':'blocked@example.test','email_confirm':'blocked@example.test'});check(s==400 and con.execute('select count(*) from users').fetchone()[0]==count,'ログイン中の直接POSTによる新規申込も拒否')
         srv.terminate();srv.wait();srv=subprocess.Popen([php,'-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         time.sleep(.3);s,b=request(login(1),'admin_accounting');check(s==200 and '架空店'.encode() in b,'再起動後も経費とDBが残る')
         print('ALL',n,'HTTP CHECKS PASSED')

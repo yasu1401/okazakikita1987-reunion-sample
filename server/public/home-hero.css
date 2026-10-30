@@ -54,3 +54,4 @@
 .session-logout{min-height:44px;padding:9px 16px;font-size:13px;white-space:nowrap;flex:none}
 @media(max-width:760px){.session-content{padding:10px 20px;gap:10px}.session-account strong{font-size:13px}.session-account>span{gap:6px}.session-logout{padding:9px 12px;font-size:12px}}
 @media print{.session-bar{display:none}}
+#mainNav a[hidden]{display:none!important}
