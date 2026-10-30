@@ -2,6 +2,8 @@ function classChoice(value){return '<label class="field">卒業時のクラス<s
 'use strict';
 const R=window.Reunion,KEY='okazaki-kita-1987-public-demo-v1',main=document.querySelector('#main');
 let state,storageOK=true;try{state=JSON.parse(localStorage.getItem(KEY)||'null');if(!state||state.schema!==1)state=R.seed();}catch{state=R.seed();storageOK=false;}
+// Update the published sample fee once; preserve saved invoices and custom fee settings.
+if(!state.sampleFee9500Applied){if(state.settings.fee===8000){state.settings.fee=9500;R.audit(state,'見本設定の更新','会費の仮設定変更','settings',{fee:8000},{fee:9500},'新規申込の見本会費を9500円へ変更。保存済み請求額は維持');}state.sampleFee9500Applied=true;try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}}
 let actor='幹事A（サンプル）',draft=null,selectedPerson=Number(sessionStorage.getItem('kita-demo-person')||1),editId=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const yen=v=>Number(v).toLocaleString('ja-JP')+'円';

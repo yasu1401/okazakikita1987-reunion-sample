@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         for _ in range(50):
             try:request(client(),'home');break
             except urllib.error.URLError:time.sleep(.1)
-        anon=client();s,b=request(anon,'home');check(s==200 and b'event-overview' in b and '8,000円'.encode() in b and b'participation-fee' in b and '2028年10月31日'.encode() in b and b'class-card' in b and 'みんな、集まってきています。'.encode() in b,'未ログインのトップに設定日程・会費・クラス人数')
+        anon=client();s,b=request(anon,'home');check(s==200 and b'event-overview' in b and '9,500円'.encode() in b and b'participation-fee' in b and '2028年10月31日'.encode() in b and b'class-card' in b and 'みんな、集まってきています。'.encode() in b,'未ログインのトップに設定日程・会費・クラス人数')
         check('入金期限'.encode() not in b and 'キャンセル期限'.encode() not in b,'トップに入金・キャンセル期限を表示しない')
         s,b=request(anon,'register');check(s==200 and '入金期限'.encode() in b and '内容変更期限'.encode() in b and 'キャンセル期限'.encode() in b,'申込フォーム内に入金・変更・キャンセル期限を表示')
         s,b=request(anon,'home');check(b'max="47"' in b and '在籍'.encode() not in b and '470'.encode() not in b and '申込締切'.encode() not in b,'トップの基準人数は数字を表示せず棒グラフだけに利用')
@@ -197,7 +197,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(owner,'admin&class_filter=0');check('クラス確認見本'.encode() not in b,'修正後はクラス未確認の一覧から除外')
         s,b=request(fresh,'my')
         check(b.count('>申込期限</dt>'.encode())==1 and b.count('>入金期限（振込期限）</dt>'.encode())==1 and b.count('>内容変更期限</dt>'.encode())==1 and b.count('>キャンセル期限</dt>'.encode())==1,'未入金の本人画面は振込先と各期限を一か所で表示')
-        payment_csv='管理情報\n日付,摘要,摘要内容,支払い金額,預かり金額,差引残高,メモ,未資金化区分,入払区分\n20261031,振込,支払表示テスト,,8000,500000,,0,入金\n'.encode()
+        payment_csv='管理情報\n日付,摘要,摘要内容,支払い金額,預かり金額,差引残高,メモ,未資金化区分,入払区分\n20261031,振込,支払表示テスト,,9500,500000,,0,入金\n'.encode()
         s,b=post(owner,'admin_bank','import',{}, {'csv':('paid-view.csv','text/csv',payment_csv)});assert s==200
         tid=con.execute('select max(id) from bank_transactions').fetchone()[0]
         s,b=post(owner,'admin_bank','bank_decide',{'id':tid,'state':'confirmed','reason':'画面確認用の見本入金'});assert s==200
