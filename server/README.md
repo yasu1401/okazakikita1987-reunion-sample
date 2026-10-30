@@ -36,12 +36,12 @@
 
 ## Macで起動
 
-PHPをインストール済みとは仮定しません。必要：PHP8.2以上（推奨8.4の最新パッチ）、pdo_sqlite / pdo_mysql / session / filter / fileinfo / mbstring / GD（JPEG・PNG）/ exif。
+PHPをインストール済みとは仮定しません。必要：サポート中の修正済みPHP（2026-10-30確認基準：8.2.35／8.3.36／8.4.27／8.5.12以上の各系列。開発環境は8.4.27）、pdo_sqlite / pdo_mysql / session / filter / fileinfo / mbstring / GD（JPEG・PNG）/ exif。
 
 1. PHPがない場合は公式案内 https://www.php.net/manual/ja/install.macosx.packages.php に沿ってHomebrew等で導入します。Homebrew導入後は`brew install php`。これは利用者自身のMacへのソフト追加です。
 2. ターミナルでこの`server`フォルダーへ移動し、`php -v`、`php -m`で確認します。
 3. `php scripts/manage.php init` → `php scripts/manage.php seed` → `php scripts/manage.php seed-community`（seedは空DB・開発環境のみ。seed-communityは架空アカウントだけの開発DBに2名／クラスを指定）。
-4. `php -d upload_max_filesize=6M -d post_max_size=8M -S 127.0.0.1:8790 -t public public/router.php`（または`start.command`を開く）
+4. `php -d session.upload_progress.enabled=0 -d upload_max_filesize=6M -d post_max_size=8M -S 127.0.0.1:8790 -t public public/router.php`（または`start.command`を開く）
 5. http://127.0.0.1:8790/ を開きます。終了はターミナルのControl+C。
 
 見本：sample1@example.test＝代表幹事、sample2@example.test＝幹事、sample3@example.test＝参加者。パスワードは全て`111111`。新規seedは架空163件（参加予定160人、取消3件）。実受付にはこのアカウントを使わないでください。
@@ -193,3 +193,21 @@ HTTP試験は使い捨てDB・架空データで、ログイン失敗後の行�
 公開GitHubサンプルの設定はブラウザー内だけで、他端末と共有されません。実口座を入力せず架空情報で確認してください。本番の共有設定と権限制御はPHPサーバー版で行います。銀行接続や実振込は行いません。
 
 現在の試作にはユーザー指定により三菱UFJ銀行の架空口座（サンプル支店・0000000）を設定しています。支店・口座は見本で、実際の振込不可と明示します。管理者が後で変更・取り下げでき、公開サンプルの初期設定は独自に変更済みの口座を上書きしません。
+
+
+## PHP脆弱性確認（2026-10-30）
+
+[環境別の確認記録](../docs/PHP脆弱性確認_2026-10-30.md)を参照してください。
+開発用の実行バイナリは8.4.27で、CVE-2026-109618／109619の上流修正版です。
+今回PHP本体の入替えは不要でした。`start.command`に修正バージョン・拡張の起動前確認を追加し、
+`session.upload_progress.enabled=0`を指定して起動します。既存のローカルサーバーにも再起動で適用しました。
+`php -d session.upload_progress.enabled=0 scripts/runtime_check.php`でCLIの情報だけ確認できます。
+判定基準は上記日付の対象2件用で、最新CVEを自動取得する仕組みではありません。
+独自バックポート適用済み環境は数字だけでは判定できず、ベンダーの修正証跡を確認します。
+
+`public/.user.ini`にも進捗機能の無効化設定を追加しました。CGI/FastCGIでの読込みは
+公開先の仕様によります。PHP-FPM／Apache／Web用PHPとSSHのCLIはバージョン・設定が
+異なる場合があるため、本番・検証環境でそれぞれ実効値を確認してください。
+PHP処理内の`ini_set()`ではアップロード解析より後になるため、この設定の代用にはしません。
+PHP本体の更新、Webワーカー再起動／設定反映、主要機能の試験まで確認して公開します。
+GitHub PagesはPHPを実行しません。さくら上の実環境、MySQL、実メール到達は未確認です。

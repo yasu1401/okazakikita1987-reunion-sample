@@ -6,7 +6,7 @@ php=sys.argv[1] if len(sys.argv)>1 else 'php'
 with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
     env=dict(os.environ,REUNION_TEST_DSN='sqlite:'+tmp+'/test.sqlite',REUNION_TEST_STORAGE=tmp+'/private')
     subprocess.run([php,str(root/'scripts/manage.php'),'seed'],env=env,check=True,capture_output=True)
-    srv=subprocess.Popen([php,'-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    srv=subprocess.Popen([php,'-d','session.upload_progress.enabled=0','-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     base='http://127.0.0.1:8791/?page='
     n=0
     def check(ok,label):
