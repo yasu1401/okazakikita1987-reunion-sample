@@ -88,3 +88,5 @@ select.class-select option[value=""]{color:#777f7b;}
 .application-schedule .overview-dates>div,.bank-guide .overview-dates>div{margin:8px 0}
 .bank-deadlines h4{font-size:13px}
 @media(max-width:760px){.application-schedule,.bank-guide{padding:16px}.application-schedule h2{font-size:18px}}
+
+.postal-choices[hidden]{display:none!important}

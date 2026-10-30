@@ -24,7 +24,7 @@ function audit(s,actor,action,entity,before,after,reason,result='成功'){s.logs
 function checkDeadline(s,kind){const date=s.settings.clock;if(date>s.settings[kind])throw new Error('この操作の期限を過ぎています。幹事にお問い合わせください。');if(kind==='registration'&&date<s.settings.open)throw new Error('申込受付開始前です。');}
 function validatePerson(s,p,isEdit=false){
  Assist.payer(p.payer);
- for(const key of ['name','kana','email','address','phone','payer'])if(!String(p[key]||'').trim())throw new Error('必須項目をすべて入力してください。');
+ for(const key of ['name','kana','email','phone','payer'])if(!String(p[key]||'').trim())throw new Error('必須項目をすべて入力してください。');
  if(!/^(?:[0-9]|10)$/.test(String(p.class)))throw new Error('クラスを選択するか「クラスを忘れた」を選んでください。');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email))throw new Error('メールアドレスの形式を確認してください。');
  if(Object.values(p).some(v=>typeof v==='string'&&v.length>1000))throw new Error('入力が長すぎます。');
