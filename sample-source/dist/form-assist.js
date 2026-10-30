@@ -6,9 +6,9 @@ const API={fold,payer};root.FormAssist=API;if(typeof module!=='undefined'&&modul
 if(typeof document==='undefined')return;
 const states=new WeakMap();
 function init(form){if(states.has(form))return states.get(form);const name=form.querySelector('[name=name]'),display=form.querySelector('[name=display]'),pay=form.querySelector('[name=payer]');if(!name||!display||!pay)return null;const state={name,display,pay,auto:!display.value||display.value===name.value,last:name.value};states.set(form,state);if(!display.value&&name.value)display.value=name.value;pay.lang='ja';pay.setAttribute('spellcheck','false');pay.setAttribute('autocomplete','off');pay.placeholder='例：ヤマダ タロウ';
-const examples={name:'例：山田 太郎',kana:'例：やまだ たろう',oldname:'例：鈴木',postal:'例：444-0000',phone:'例：090-1234-5678',display:'例：山田 太郎'};
+const examples={name:'例：山田 太郎',kana:'例：やまだ たろう',oldname:'例：鈴木',postal:'例：444-0000',address:'例：愛知県岡崎市○○町1-2-3',phone:'例：090-1234-5678',display:'例：山田 太郎'};
 for(const [key,example] of Object.entries(examples)){const el=form.querySelector('[name='+key+']');if(el)el.placeholder=example;}
-for(const [key,text] of [['name','姓と名の間を1文字空けてください。'],['kana','ひらがなで、姓と名の間を1文字空けてください。']]){const el=form.querySelector('[name='+key+']');if(el){const hint=document.createElement('small');hint.className='input-example-note';hint.textContent=text;el.insertAdjacentElement('afterend',hint);}}
+for(const [key,text] of [['name','姓と名の間を1文字空けてください。'],['kana','ひらがなで、姓と名の間を1文字空けてください。'],['address','都道府県から、番地・建物名・部屋番号まで入力してください。']]){const el=form.querySelector('[name='+key+']');if(el){const hint=document.createElement('small');hint.className='input-example-note';hint.textContent=text;el.insertAdjacentElement('afterend',hint);}}
 return state;}
 function scan(){document.querySelectorAll('form').forEach(form=>{
 init(form);
