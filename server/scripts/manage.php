@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__.'/../src/bootstrap.php';require APP_ROOT.'/src/domain.php';require APP_ROOT.'/src/community.php';require __DIR__.'/demo_roster.php';
 $cmd=$argv[1]??'help';
 if(in_array($cmd,['init','migrate'],true)){schema();echo "スキーマ初期化完了\n";}
-elseif($cmd==='seed'){requirev($config['mode']==='development','開発環境専用です。');schema();requirev(!one('SELECT id FROM users'),'空のDBでのみ実行できます。');$hash=password_hash('111111',PASSWORD_DEFAULT);atomic(function()use($hash){for($i=1;$i<=160;$i++)demoInsert($i,($i-1)%10+1,intdiv($i-1,10),$hash);foreach([3,6,9] as $j=>$cl)demoInsert(161+$j,$cl,16,$hash,'cancelled');});echo "架空163件、参加予定160人（各組16人）、取消3件。sample1=代表、sample2=幹事、sample3=参加者。@example.test / 111111\n";}
+elseif($cmd==='seed'){requirev($config['mode']==='development','開発環境専用です。');schema();requirev(!one('SELECT id FROM users'),'空のDBでのみ実行できます。');$hash=password_hash('111111',PASSWORD_DEFAULT);atomic(function()use($hash){$s=setting();$s['bankAccount']=['bankName'=>'三菱UFJ銀行（サンプル）','branchName'=>'サンプル支店（架空・振込不可）','accountType'=>'普通','accountNumber'=>'0000000','accountHolder'=>'オカザキキタ ドウソウカイ（ミホン）'];q('UPDATE settings SET data_json=? WHERE id=1',[jsonv($s)]);for($i=1;$i<=160;$i++)demoInsert($i,($i-1)%10+1,intdiv($i-1,10),$hash);foreach([3,6,9] as $j=>$cl)demoInsert(161+$j,$cl,16,$hash,'cancelled');});echo "架空163件、参加予定160人（各組16人）、取消3件。sample1=代表、sample2=幹事、sample3=参加者。@example.test / 111111\n";}
 elseif($cmd==='expand-demo-roster'){expandDemoRoster();}
 elseif($cmd==='seed-community'){
  requirev($config['mode']==='development','開発環境専用です。');schema();

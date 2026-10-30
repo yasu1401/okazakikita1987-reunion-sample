@@ -1,3 +1,4 @@
+BankAccount.prepare(state);
 const bankBaseSettings=settingsPage,bankBaseMy=myPage;
 myPage=function(){const html=bankBaseMy();if(!current())return html;const box=document.createElement('div');box.innerHTML=html;box.querySelector('.panel')?.insertAdjacentHTML('beforeend',bankAccountGuide(state.settings));return box.innerHTML;};
 settingsPage=function(){const box=document.createElement('div');box.innerHTML=bankBaseSettings();const b=state.settings.bankAccount||{};let html='<section class="panel"><h2>会費の振込先口座</h2><p>参加申込の期限案内に表示します。口座情報を変更できるのは管理者だけです。</p>';
