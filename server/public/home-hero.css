@@ -64,3 +64,4 @@ header #mainNav>a{display:inline-flex;align-items:center;justify-content:center;
 @media(max-width:360px){header{padding:12px 14px;gap:12px 8px}header .brand{gap:6px}header .brand img{width:28px;height:28px}header .brand span{font-size:9px}header .brand b{font-size:7px}.session-content{gap:5px}.session-account strong{max-width:65px;font-size:10px}.session-account>span{display:block}.session-role{display:block}header #mainNav>a{font-size:11px}}
 @media print{.session-bar{display:none}}
 .name-card .name-role{display:inline-block;margin:6px 5px 0 0;padding:2px 7px;border-radius:4px;background:#edf2e6;color:#345b40;font-size:11px;line-height:1.5}
+.name-roles{display:block}.name-roles:empty{display:none}
