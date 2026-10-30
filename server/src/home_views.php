@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+declare(strict_types=1);require_once __DIR__.'/bank_account.php';
 function homeDate(string $date):string {
  if(preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D',$date,$m))return $m[1].'年'.(int)$m[2].'月'.(int)$m[3].'日';
  return $date;
@@ -17,5 +17,5 @@ function homeClassSummary():string {
 function applicationSchedule(array $s):string {
  $html='<section class="application-schedule"><div class="eyebrow">APPLICATION GUIDE</div><h2>会費・お申し込みの期限</h2><p>以下は表示確認用の仮設定です。</p><dl class="overview-dates"><div><dt>会費（仮）</dt><dd>'.h(yen((int)$s['fee'])).'</dd></div>';
  foreach(['registration'=>'申込期限','payment'=>'入金期限','change'=>'内容変更期限','cancel'=>'キャンセル期限'] as $key=>$label)$html.='<div><dt>'.$label.'</dt><dd>'.h(homeDate($s[$key])).'</dd></div>';
- return $html.'</dl><p class="mini-note">内容変更・欠席の申請はログイン後の「申込確認」から行えます。各期限は幹事の設定により変更される場合があります。</p></section>';
+ return $html.'</dl>'.bankAccountGuide($s).'<p class="mini-note">内容変更・欠席の申請はログイン後の「申込確認」から行えます。各期限は幹事の設定により変更される場合があります。</p></section>';
 }

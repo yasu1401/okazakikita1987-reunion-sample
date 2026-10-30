@@ -142,6 +142,15 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(participant,'register');check(s==200 and '申込番号'.encode() in b and b'name="action" value="register"' not in b,'ログイン中の申込URLは本人の申込確認へ')
         count=con.execute('select count(*) from users').fetchone()[0]
         s,b=request(participant,'register',{'csrf':token(participant,'my'),'action':'register',**values,'email':'blocked@example.test','email_confirm':'blocked@example.test'});check(s==400 and con.execute('select count(*) from users').fetchone()[0]==count,'ログイン中の直接POSTによる新規申込も拒否')
+        bank={'bankName':'見本銀行（架空） <script>','branchName':'見本支店','accountType':'普通','accountNumber':'００１２３４５','accountHolder':'ミホンドウソウカイ','reason':'架空口座の設定'}
+        s,b=post(organizer,'admin_settings','bank_account',bank);check(s==400,'幹事の口座変更POSTを拒否')
+        s,b=post(owner,'admin_settings','bank_account',bank);check(s==200 and json.loads(con.execute('select data_json from settings').fetchone()[0])['bankAccount']['accountNumber']=='0012345','管理者が口座設定・先頭ゼロを保持して保存')
+        s,b=request(client(),'register');check('0012345'.encode() in b and b'&lt;script&gt;' in b,'未ログインの申込案内に口座情報・XSSを無害化')
+        s,b=request(participant,'my');check('0012345'.encode() in b,'申込確認にも振込先口座を表示')
+        s,b=request(organizer,'admin_settings');check(b'name="bankName"' not in b and '幹事は閲覧のみ'.encode() in b,'幹事には口座の編集欄を表示しない')
+        saved=json.loads(con.execute('select data_json from settings').fetchone()[0]);general={k:str(saved[k]) for k in ['dateLabel','venue','fee','classSize','capacity','opening','open','registration','payment','change','cancel','photoEnd']};general.update(reason='一般設定変更',bankAccount='forged',bankName='forged')
+        s,b=post(organizer,'admin_settings','settings',general);check(s==200 and json.loads(con.execute('select data_json from settings').fetchone()[0])['bankAccount']['bankName']==bank['bankName'],'一般設定から口座設定を上書きできない')
+        s,b=post(owner,'admin_settings','bank_account',{'reason':'架空口座を取り下げ'});check(s==200 and not json.loads(con.execute('select data_json from settings').fetchone()[0])['bankAccount'],'口座情報を未設定へ戻せる')
         srv.terminate();srv.wait();srv=subprocess.Popen([php,'-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         time.sleep(.3);s,b=request(login(1),'admin_accounting');check(s==200 and '架空店'.encode() in b,'再起動後も経費とDBが残る')
         print('ALL',n,'HTTP CHECKS PASSED')
