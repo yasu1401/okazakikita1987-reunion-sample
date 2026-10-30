@@ -1,0 +1,2 @@
+const test=require('node:test'),assert=require('node:assert/strict'),A=require('../dist/album-ui.js');
+test('スマホ写真は縦横比を保って長辺2000pxへ・小さい写真は拡大しない',()=>{assert.deepEqual(A.targetSize(4032,3024),{width:2000,height:1500});assert.deepEqual(A.targetSize(3024,4032),{width:1500,height:2000});assert.deepEqual(A.targetSize(640,480),{width:640,height:480});assert.throws(()=>A.targetSize(8000,6000));assert.throws(()=>A.targetSize(0,10));});

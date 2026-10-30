@@ -14,8 +14,8 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         assert ok,label
         n+=1;print('PASS',n,label)
     def client():return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
-    def request(c,page,data=None,files=None):
-        headers={}
+    def request(c,page,data=None,files=None,accept_json=False):
+        headers={'Accept':'application/json'} if accept_json else {}
         if files:
             boundary='KitaReunionTestBoundary';parts=[]
             for k,v in data.items():parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         except urllib.error.HTTPError as e:return e.code,e.read()
     def token(c,page):
         status,b=request(c,page);m=re.search(rb'name="csrf" value="([a-f0-9]+)"',b);assert m,(status,b[:500]);return m[1].decode()
-    def post(c,page,action,values={},files=None):return request(c,page,{'csrf':token(c,page),'action':action,**values},files)
+    def post(c,page,action,values={},files=None,accept_json=False):return request(c,page,{'csrf':token(c,page),'action':action,**values},files,accept_json)
     def login(i):
         c=client();status,b=post(c,'login','login',{'email':f'sample{i}@example.test','password':'111111'});assert status==200,(status,b[:100]);return c
     try:
@@ -151,6 +151,27 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         saved=json.loads(con.execute('select data_json from settings').fetchone()[0]);general={k:str(saved[k]) for k in ['dateLabel','venue','fee','classSize','capacity','opening','open','registration','payment','change','cancel','photoEnd']};general.update(reason='一般設定変更',bankAccount='forged',bankName='forged')
         s,b=post(organizer,'admin_settings','settings',general);check(s==200 and json.loads(con.execute('select data_json from settings').fetchone()[0])['bankAccount']['bankName']==bank['bankName'],'一般設定から口座設定を上書きできない')
         s,b=post(owner,'admin_settings','bank_account',{'reason':'架空口座を取り下げ'});check(s==200 and not json.loads(con.execute('select data_json from settings').fetchone()[0])['bankAccount'],'口座情報を未設定へ戻せる')
+        # Admin navigation is contained in admin pages; gallery uses covers and a viewer.
+        s,b=request(owner,'home');check(b'class="admin-tabs"' not in b and '幹事画面'.encode() in b,'通常ページは通常メニューだけを常時表示')
+        s,b=request(owner,'admin');check(b'class="admin-tabs"' in b,'管理メニューは幹事画面内で表示')
+        count_before=con.execute('select count(*) from private_files where submitted=1').fetchone()[0]
+        wide=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',2400,4,8,2,0,0,0))+chunk(b'IDAT',zlib.compress((b'\x00'+b'\x99\xdd\xbb'*2400)*4))+chunk(b'IEND',b'')
+        batch_ids=[]
+        for key in ['a'*32,'b'*32]:
+            s,b=post(participant,'my','post_photo',{**postdata,'post_key':key,'title':'複数投稿の見本'}, {'photo':('wide.png','image/png',wide)},True)
+            response=json.loads(b);assert s==200 and response['ok'];batch_ids.append(response['id'])
+        check(con.execute('select count(*) from private_files where submitted=1').fetchone()[0]==count_before+2,'複数枚投稿用のJSON応答で2枚を連続保存')
+        s,b=post(participant,'my','post_photo',{**postdata,'post_key':'a'*32},{'photo':('wide.png','image/png',wide)},True)
+        check(json.loads(b)['id']==batch_ids[0] and con.execute('select count(*) from private_files where submitted=1').fetchone()[0]==count_before+2,'再試行でも成功済みの写真を重複しない')
+        key=con.execute('select storage_key from private_files where id=?',(batch_ids[0],)).fetchone()[0]
+        width=subprocess.check_output([php,'-r','echo getimagesize($argv[1])[0];',tmp+'/private/'+key]).decode()
+        check(width=='2000','サーバーでも長辺2000pxへ縮小保存')
+        s,b=request(participant,'gallery');check(b'class="album-cover"' in b and '2枚'.encode() in b,'アルバム一覧に表紙と閲覧可能な写真の枚数')
+        s,b=request(participant,'gallery&album='+str(submissionalbum));check(b'data-photo-view' in b and b'data-photo-group' in b and b'album-ui.js' in b,'アルバム内の写真を拡大ビューアへ接続')
+        s,b=request(participant,'my',{'csrf':'forged','action':'post_photo',**postdata},{'photo':('sample.png','image/png',png)},True)
+        check(s==400 and json.loads(b)['ok'] is False,'複数投稿用JSONでもCSRF不一致を拒否')
+        # Participant language and next step; use only the isolated test database.
+        s,b=request(participant,'my');check('確認済みの入金額'.encode() in b and '申込受付済み'.encode() in b and '会費のお振り込みをお願いします'.encode() in b and '入金割当'.encode() not in b and '未入金・過払い差額'.encode() not in b,'未入金の本人画面に次のお手続きと分かりやすい金額表示')
         # Unknown class registration, combined admin filters, audited staff correction.
         fresh=client();s,b=request(fresh,'register')
         check('value="" disabled selected>クラスを選択'.encode() in b,'申込クラスは未選択の初期表示')

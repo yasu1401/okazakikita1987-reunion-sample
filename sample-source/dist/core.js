@@ -59,6 +59,16 @@ function correctClass(s,u,id,cl,revision,reason){
  audit(s,u.name,'卒業時クラス訂正',p.number,before,{class:p.class,revision:p.revision},reason);return p;
 }
 
-const API={classLabel,correctClass,normalizePayer:Assist.payer,HEADERS,clone,seed,sampleProfile,active,totalPaid,due,paymentLabel,counts,audit,checkDeadline,validatePerson,register,editPerson,cancel,parseCSV,parseMoney,parseDate,importCSV,used,decide,allocate,unallocate,toCSV,fixtures};
+
+function registrationGuide(p,paid,balance,today,paymentDate){
+ const yen=n=>n.toLocaleString('ja-JP')+'円';
+ const g={tone:'waiting',label:'申込受付済み',title:'会費のお振り込みをお願いします',message:'下記の振込先・入金期限をご確認のうえ、会費をお振り込みください。',balanceLabel:'これからお振り込みいただく金額',balanceValue:(balance>0?'あと':'')+yen(Math.max(0,balance)),note:'すでにお振り込みの場合は、幹事の確認・画面への反映をお待ちください。重ねて振り込む必要はありません。'};
+ if(['cancel_requested','cancelled'].includes(p.status)){g.tone='review';g.label=p.status==='cancel_requested'?'欠席申請受付済み':'欠席への変更完了';g.title=p.status==='cancel_requested'?'幹事が欠席の申請を確認しています':'欠席への変更が完了しました';g.message=paid>0?'お支払い済みの会費について、返金の有無・金額・手続きを幹事が確認します。':'今後のお支払いについては、幹事からの案内をご確認ください。';g.balanceLabel='お支払い・返金のご案内';g.balanceValue='幹事に確認';g.note='追加のお振り込みはせず、ご不明な点は問い合わせフォームからご連絡ください。';return g;}
+ if(balance<=0){g.tone='complete';g.label=paid>0?'入金確認済み':'申込受付済み';g.title=paid>0?'会費の入金を確認しました':'お支払いはありません';g.message='追加のお振り込みは不要です。開催に関するご案内は、登録メールアドレスとサイトでご確認ください。';g.note='申込内容に変更がある場合は、変更期限内にこの画面からお手続きください。';if(balance<0){g.tone='review';g.balanceLabel='多くお預かりしている金額';g.balanceValue=yen(-balance);g.message='会費より多い金額の入金を確認しています。差額の取り扱いは幹事が確認します。追加のお振り込みは不要です。';}}
+ else if(paid>0){g.label='一部入金確認済み';g.title='残りの会費のお振り込みをお願いします';g.message='会費の一部の入金を確認しました。下記の残額と入金期限をご確認ください。';}
+ if(balance>0&&today>paymentDate){g.tone='review';g.title='入金期限を過ぎています。幹事へご連絡ください';g.message='申込は自動で取り消されていません。お振り込み前に、問い合わせフォームから幹事へご相談ください。';}return g;
+}
+
+const API={registrationGuide,classLabel,correctClass,normalizePayer:Assist.payer,HEADERS,clone,seed,sampleProfile,active,totalPaid,due,paymentLabel,counts,audit,checkDeadline,validatePerson,register,editPerson,cancel,parseCSV,parseMoney,parseDate,importCSV,used,decide,allocate,unallocate,toCSV,fixtures};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;root.Reunion=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
