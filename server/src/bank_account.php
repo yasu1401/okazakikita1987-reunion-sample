@@ -8,11 +8,13 @@ function saveBankAccount(array $u,array $d):void {
  else{foreach(['bankName','branchName','accountHolder'] as $k)requirev($account[$k]!=='','銀行名・支店名・口座名義を入力してください。');requirev(in_array($account['accountType'],['普通','当座'],true),'口座種別を選択してください。');requirev((bool)preg_match('/^[0-9]{7}$/D',$account['accountNumber']),'口座番号は7桁の数字で入力してください（先頭の0も入力）。');}
  $s=setting();$before=$s['bankAccount']??[];$s['bankAccount']=$account;q('UPDATE settings SET data_json=? WHERE id=1',[jsonv($s)]);logv((int)$u['id'],'振込先口座の設定変更','settings:bank-account',$before,$account,reasonv($d));
 }
-function bankAccountGuide(array $s,bool $withDeadlines=false):string {
- $b=$s['bankAccount']??[];$html='<section class="bank-guide"><h3>'.($withDeadlines?'会費の振込先・お手続きの期限':'会費の振込先').'</h3>';
+function bankAccountGuide(array $s,bool $withDeadlines=false,bool $showTransfer=true):string {
+ $b=$s['bankAccount']??[];$html='<section class="bank-guide"><h3>'.($showTransfer?'会費の振込先':'内容変更・キャンセルの期限').'</h3>';
+ if($showTransfer){
  if(empty($b['bankName'])||empty($b['accountNumber']))$html.='<p>振込先は準備中です。口座情報の案内があるまでお振り込みをお待ちください。</p>';
  else{$html.='<dl class="overview-dates">';foreach(['bankName'=>'銀行名','branchName'=>'支店名','accountType'=>'口座種別','accountNumber'=>'口座番号','accountHolder'=>'口座名義'] as $k=>$label)$html.='<div><dt>'.$label.'</dt><dd>'.h($b[$k]??'').'</dd></div>';$html.='</dl><p class="mini-note">振込名義は申込時に入力したカタカナ名義にそろえてください。開発プレビューでは実際の振込は行わないでください。</p>';}
- if($withDeadlines){$html.='<div class="bank-deadlines"><h4>お手続きの期限</h4><dl class="overview-dates">';foreach(['payment'=>'入金期限（振込期限）','change'=>'内容変更期限','cancel'=>'キャンセル期限'] as $k=>$label)$html.='<div><dt>'.$label.'</dt><dd>'.h(homeDate($s[$k])).'</dd></div>';$html.='</dl></div>';}
+ }
+ if($withDeadlines){$html.='<div class="bank-deadlines">'.($showTransfer?'<h4>お手続きの期限</h4>':'').'<dl class="overview-dates">';$deadlines=$showTransfer?['registration'=>'申込期限','payment'=>'入金期限（振込期限）','change'=>'内容変更期限','cancel'=>'キャンセル期限']:['change'=>'内容変更期限','cancel'=>'キャンセル期限'];foreach($deadlines as $k=>$label)$html.='<div><dt>'.$label.'</dt><dd>'.h(homeDate($s[$k])).'</dd></div>';$html.='</dl></div>';}
  return $html.'</section>';
 }
 function bankAccountSettings(array $u):string {

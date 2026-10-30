@@ -195,6 +195,15 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         check(json.loads(log[0])['class']==0 and json.loads(log[1])['class']==5 and log[2]==correction['reason'],'クラス訂正の変更前後・理由を監査ログに保存')
         s,b=request(fresh,'my');check('3年5組'.encode() in b and 'クラス確認中'.encode() not in b,'修正結果を本人画面へ反映')
         s,b=request(owner,'admin&class_filter=0');check('クラス確認見本'.encode() not in b,'修正後はクラス未確認の一覧から除外')
+        s,b=request(fresh,'my')
+        check(b.count('>申込期限</dt>'.encode())==1 and b.count('>入金期限（振込期限）</dt>'.encode())==1 and b.count('>内容変更期限</dt>'.encode())==1 and b.count('>キャンセル期限</dt>'.encode())==1,'未入金の本人画面は振込先と各期限を一か所で表示')
+        payment_csv='管理情報\n日付,摘要,摘要内容,支払い金額,預かり金額,差引残高,メモ,未資金化区分,入払区分\n20261031,振込,支払表示テスト,,8000,500000,,0,入金\n'.encode()
+        s,b=post(owner,'admin_bank','import',{}, {'csv':('paid-view.csv','text/csv',payment_csv)});assert s==200
+        tid=con.execute('select max(id) from bank_transactions').fetchone()[0]
+        s,b=post(owner,'admin_bank','bank_decide',{'id':tid,'state':'confirmed','reason':'画面確認用の見本入金'});assert s==200
+        s,b=post(owner,'admin_bank','allocate',{'bank_id':tid,'registration_id':uid,'amount':amount,'reason':'見本の会費入金を確認'});assert s==200
+        s,b=request(fresh,'my');check('入金確認済み'.encode() in b and '会費の振込先'.encode() not in b and '入金期限（振込期限）'.encode() not in b and '>申込期限</dt>'.encode() not in b,'入金済みは振込先・入金期限・申込期限を表示しない')
+        check(b.count('>内容変更期限</dt>'.encode())==1 and b.count('>キャンセル期限</dt>'.encode())==1,'入金済みは変更・キャンセル期限を各一回表示')
         srv.terminate();srv.wait();srv=subprocess.Popen([php,'-d','session.upload_progress.enabled=0','-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         time.sleep(.3);s,b=request(login(1),'admin_accounting');check(s==200 and '架空店'.encode() in b,'再起動後も経費とDBが残る')
         print('ALL',n,'HTTP CHECKS PASSED')
