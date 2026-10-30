@@ -67,3 +67,8 @@ header #mainNav>a{display:inline-flex;align-items:center;justify-content:center;
 .name-roles{display:block}.name-roles:empty{display:none}
 .bank-guide{margin:24px 0;padding:20px;background:#fffdf6;border:1px solid #d8dfcf;border-radius:8px}.bank-guide h3{font-size:18px}.bank-guide>p{font-size:13px}.bank-guide dd{overflow-wrap:anywhere}
 .bank-deadlines{border-top:1px solid #d8dfcf;margin-top:18px;padding-top:16px}.bank-deadlines h4{font-size:14px;margin:0 0 12px}.bank-deadlines .overview-dates>div{grid-template-columns:150px minmax(0,1fr)}@media(max-width:760px){.bank-deadlines .overview-dates>div{grid-template-columns:1fr;gap:3px}}
+
+/* A blank class is a prompt, not an inferred selection. */
+select.class-select:invalid{color:#777f7b;}
+select.class-select option{color:#263e36;}
+select.class-select option[value=""]{color:#777f7b;}

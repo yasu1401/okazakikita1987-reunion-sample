@@ -14,16 +14,16 @@ function contactView(?array $u):string {
 }
 function rosterView():string {
     $cl=(int)($_GET['class']??0);if($cl<0||$cl>10)$cl=0;
-    $rows=all("SELECT r.class_no,r.data_json,u.role,EXISTS(SELECT 1 FROM class_contacts c WHERE c.user_id=r.user_id AND c.class_no=r.class_no) AS is_contact FROM registrations r JOIN users u ON u.id=r.user_id WHERE r.status='active' ORDER BY r.class_no,r.id");$counts=array_fill(1,10,0);foreach($rows as $r)$counts[(int)$r['class_no']]++;
+    $rows=all("SELECT r.class_no,r.data_json,u.role,EXISTS(SELECT 1 FROM class_contacts c WHERE c.user_id=r.user_id AND c.class_no=r.class_no) AS is_contact FROM registrations r JOIN users u ON u.id=r.user_id WHERE r.status='active' ORDER BY r.class_no,r.id");$counts=array_fill(0,11,0);foreach($rows as $r)$counts[(int)$r['class_no']]++;
     $html='<div class="page-title"><div class="eyebrow">CLASSMATES</div><h1>'.($cl?'3年'.$cl.'組の、懐かしい顔ぶれ。':'みんなの参加予定').'</h1><p>現在の氏名はすべて架空の見本です。掲載に同意された表示名を掲載します。住所・電話・メールは表示しません。</p></div><div class="panel"><div class="section-head"><h2>'.($cl?'3年'.$cl.'組':'全クラス').'の参加予定 <span class="amount">'.($cl?$counts[$cl]:count($rows)).'</span> 人</h2><p>全体の参加予定：'.count($rows).'人</p></div><div class="class-tabs"><a href="?page=classes" class="'.(!$cl?'active':'').'">全クラス</a>';
     for($i=1;$i<=10;$i++)$html.='<a href="?page=classes&amp;class='.$i.'" class="'.($cl===$i?'active':'').'">3年'.$i.'組 <small>'.$counts[$i].'人</small></a>';
     $html.='</div><div class="roster">';$shown=0;
-    foreach($rows as $r){$d=obj($r['data_json']);if(!$d['public']||($cl&&(int)$r['class_no']!==$cl))continue;$shown++;$labels=[];if(in_array($r['role'],['owner','organizer'],true))$labels[]='幹事';if($r['is_contact'])$labels[]='クラス幹事';$badges='<div class="name-roles">'.implode('',array_map(fn($label)=>'<small class="name-role">'.h($label).'</small>',$labels)).'</div>';$html.='<div class="name-card"><small>3年'.$r['class_no'].'組</small><strong>'.h($d['display']).'</strong>'.$badges.'</div>';}
+    foreach($rows as $r){$d=obj($r['data_json']);if(!$d['public']||($cl&&(int)$r['class_no']!==$cl))continue;$shown++;$labels=[];if(in_array($r['role'],['owner','organizer'],true))$labels[]='幹事';if($r['is_contact'])$labels[]='クラス幹事';$badges='<div class="name-roles">'.implode('',array_map(fn($label)=>'<small class="name-role">'.h($label).'</small>',$labels)).'</div>';$html.='<div class="name-card"><small>'.h(registrationClassLabel((int)$r['class_no'])).'</small><strong>'.h($d['display']).'</strong>'.$badges.'</div>';}
     if(!$shown)$html.='<p class="empty">掲載中の参加予定者はいません。</p>';
     return $html.'</div><p class="section-note">人数には名前を掲載しない方も含みます。欠席申請中・取消済みの方は参加予定人数から除いています。</p></div>';
 }
 function contactsForPerson(array $p):string {
-    $cl=(int)$p['class_no'];$contacts=classContacts($cl);$names=$contacts?implode('',array_map(fn($c)=>'<div class="name-card"><small>3年'.$cl.'組 クラス幹事</small><strong>'.h($c['name']).'</strong></div>',$contacts)):'<p>クラス幹事は決まり次第ご案内します。</p>';
+    $cl=(int)$p['class_no'];if($cl===0)return '<section class="panel"><h2>卒業時のクラスを確認中です</h2><p>幹事が確認後に修正します。心当たりがあれば<a href="?page=home#contact">問い合わせフォーム</a>でお知らせください。</p></section>';$contacts=classContacts($cl);$names=$contacts?implode('',array_map(fn($c)=>'<div class="name-card"><small>3年'.$cl.'組 クラス幹事</small><strong>'.h($c['name']).'</strong></div>',$contacts)):'<p>クラス幹事は決まり次第ご案内します。</p>';
     return '<section class="panel"><div class="eyebrow">YOUR CLASS ORGANIZERS</div><h2>3年'.$cl.'組のクラス幹事</h2><div class="roster">'.$names.'</div><p>ご連絡は<a href="?page=home#contact">問い合わせフォーム</a>をご利用ください。</p></section>';
 }
 function contactsAdminView():string {

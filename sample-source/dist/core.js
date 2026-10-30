@@ -25,7 +25,7 @@ function checkDeadline(s,kind){const date=s.settings.clock;if(date>s.settings[ki
 function validatePerson(s,p,isEdit=false){
  Assist.payer(p.payer);
  for(const key of ['name','kana','email','address','phone','payer'])if(!String(p[key]||'').trim())throw new Error('必須項目をすべて入力してください。');
- if(!Number.isInteger(Number(p.class))||Number(p.class)<1||Number(p.class)>10)throw new Error('3年1組〜10組を選択してください。');
+ if(!/^(?:[0-9]|10)$/.test(String(p.class)))throw new Error('クラスを選択するか「クラスを忘れた」を選んでください。');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email))throw new Error('メールアドレスの形式を確認してください。');
  if(Object.values(p).some(v=>typeof v==='string'&&v.length>1000))throw new Error('入力が長すぎます。');
  if(p.public&&!String(p.display||'').trim())throw new Error('名簿に表示する名前を入力してください。');
@@ -46,6 +46,19 @@ function unallocate(s,id,reason,actor){const a=s.allocations.find(x=>x.id===id);
 function csvCell(v){v=String(v??'');if(/^[\s]*[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}
 function toCSV(rows){return '\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');}
 function fixtures(part=1){const a=['20261027','振込','K87-00003 サンプル003','','8,000','108,000','','0','入金'],b=['261027','振込','K87-00006 サンプル006','','8,000','116,000','','0','入金'],c=['2026/10/27','振込','同日同額同名義の架空例','','8,000','124,000','','0','入金'],d=['2026/10/27','振込','同日同額同名義の架空例','','8,000','132,000','','0','入金'];const rows=part===1?[a,b,c]:part===2?[b,c,d]:[['2026/10/27','振込','該当なし','','6,000','138,000','','未資金化','入金'],['2026/10/27','支払','出金テスト','1,000','','137,000','','','出金'],['20261345','振込','日付エラー','','8,000','145,000','','','入金']];return toCSV([['架空口座・操作確認用・実明細ではありません'],HEADERS,...rows]);}
-const API={normalizePayer:Assist.payer,HEADERS,clone,seed,sampleProfile,active,totalPaid,due,paymentLabel,counts,audit,checkDeadline,validatePerson,register,editPerson,cancel,parseCSV,parseMoney,parseDate,importCSV,used,decide,allocate,unallocate,toCSV,fixtures};
+
+function classLabel(cl){return Number(cl)===0?'クラス確認中':'3年'+cl+'組';}
+function correctClass(s,u,id,cl,revision,reason){
+ if(!u||!['owner','organizer'].includes(u.role))throw new Error('幹事権限が必要です。');
+ if(!/^(?:[1-9]|10)$/.test(String(cl)))throw new Error('確認したクラスを選択してください。');
+ const p=s.people.find(p=>p.id===Number(id));if(!p)throw new Error('申込がありません。');
+ if(p.revision!==Number(revision))throw new Error('別の更新があります。再読み込みしてください。');
+ if(p.class===Number(cl))throw new Error('現在と異なるクラスを選択してください。');if(!reason.trim())throw new Error('確認・修正理由を入力してください。');
+ const before={class:p.class,revision:p.revision};p.class=Number(cl);p.revision++;
+ if(s.classContacts){const removed=s.classContacts.filter(c=>c.userId===p.id&&c.class!==p.class);s.classContacts=s.classContacts.filter(c=>!removed.includes(c));for(const c of removed)audit(s,u.name,'クラス変更による幹事表示解除','class_contact:'+c.id,c,null,reason);}
+ audit(s,u.name,'卒業時クラス訂正',p.number,before,{class:p.class,revision:p.revision},reason);return p;
+}
+
+const API={classLabel,correctClass,normalizePayer:Assist.payer,HEADERS,clone,seed,sampleProfile,active,totalPaid,due,paymentLabel,counts,audit,checkDeadline,validatePerson,register,editPerson,cancel,parseCSV,parseMoney,parseDate,importCSV,used,decide,allocate,unallocate,toCSV,fixtures};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;root.Reunion=API;
 })(typeof globalThis!=='undefined'?globalThis:this);
