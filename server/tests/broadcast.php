@@ -19,7 +19,7 @@ denied(fn()=>atomic(fn()=>queueBroadcast($b,['id'=>$id2,'confirm'=>'yes'])),'停
 echo "ALL $n BROADCAST-INCLUSIVE CHECKS PASSED\n";
 passwordv('111111',true);check(true,'開発用の申込で共通6桁を許可');
 denied(fn()=>passwordv('111111'),'代表幹事CLI用の通常検証は6桁を拒否');
-$config['mode']='live';denied(fn()=>passwordv('111111',true),'本番では開発用6桁特例を拒否');$config['mode']='development';
+$config['mode']='live';passwordv('123',true);check(true,'参加者のパスワードは本番でも3文字以上');denied(fn()=>passwordv('12',true),'参加者の2文字を拒否');$config['mode']='development';
 $bank=['bankName'=>'見本銀行 <script>','branchName'=>'架空支店','accountType'=>'普通','accountNumber'=>'００１２３４５','accountHolder'=>'ミホンドウソウカイ','reason'=>'試作確認'];
 denied(fn()=>atomic(fn()=>saveBankAccount($b,$bank)),'幹事は口座設定を変更不可');
 denied(fn()=>atomic(fn()=>saveBankAccount($p,$bank)),'参加者は口座設定を変更不可');

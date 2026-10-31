@@ -222,5 +222,13 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         check(s==200 and '申込受付済み'.encode() in b,'住所・郵便番号なしでも新規申込が可能')
         optional=con.execute("select r.data_json from registrations r join users u on u.id=r.user_id where u.email='optional-address@example.test'").fetchone()
         check(json.loads(optional[0])['address']=='' and json.loads(optional[0])['postal']=='' and json.loads(optional[0])['phone']=='09012345678','住所の空欄とハイフンなし電話番号を保存')
+        short_password=client()
+        short_data={**unknown,'class':'1','email':'three-character@example.test','email_confirm':'three-character@example.test','password':'12','password_confirm':'12'}
+        s,b=post(short_password,'register','register',short_data)
+        check(s==400 and '3桁以上のパスワードを設定してください'.encode() in b,'2文字のパスワードは指定の案内で拒否')
+        s,b=post(short_password,'register','register',{**short_data,'password':'123','password_confirm':'123'})
+        check(s==200 and '申込受付済み'.encode() in b,'3文字のパスワードで参加申込を保存')
+        short_login=client();s,b=post(short_login,'login','login',{'email':'three-character@example.test','password':'123'})
+        check(s==200 and 'クラス確認見本'.encode() in b,'3文字で設定したパスワードで本人ログイン')
         print('ALL',n,'HTTP CHECKS PASSED')
     finally:srv.terminate();srv.wait()
