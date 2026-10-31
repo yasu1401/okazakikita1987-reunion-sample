@@ -157,7 +157,7 @@ function scan(){document.querySelectorAll('form').forEach(form=>{
 init(form);
 // Input hints only: do not change stored values or validation rules.
 for(const el of form.querySelectorAll('input')){
- if(el.name==='phone'){el.type='tel';el.setAttribute('inputmode','tel');el.autocomplete='tel';}
+ if(el.name==='phone'){el.type='tel';el.setAttribute('inputmode','numeric');el.autocomplete='off';el.setAttribute('autocorrect','off');el.setAttribute('spellcheck','false');}
  if(el.name==='postal')el.autocomplete='postal-code';
  if(el.type==='email'){el.autocomplete='email';el.setAttribute('autocapitalize','none');el.setAttribute('spellcheck','false');}
 }
