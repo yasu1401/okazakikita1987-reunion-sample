@@ -5,11 +5,10 @@ const OUTBOX_STATUS=['development'=>'開発用・未送信','queued'=>'送信待
 function inquiryClassLabel(mixed $value):string {return $value===null?'未登録（以前の問い合わせ）':((int)$value===0?'クラスを忘れた':'3年'.(int)$value.'組');}
 function contactView(?array $u):string {
     $_SESSION['contact_nonce']??=bin2hex(random_bytes(16));
-    $registration=$u?registrationFor((int)$u['id']):null;$selected=$registration['class_no']??'';
-    $classSelect='<label class="field">卒業時のクラス<select name="class" required><option value="">選択してください</option>';
-    for($cl=1;$cl<=10;$cl++)$classSelect.='<option value="'.$cl.'"'.((string)$selected===(string)$cl?' selected':'').'>3年'.$cl.'組</option>';
+    $classSelect='<label class="field">卒業時のクラス<select name="class" class="class-select" required><option value="" disabled selected>選択してください</option>';
+    for($cl=1;$cl<=10;$cl++)$classSelect.='<option value="'.$cl.'">3年'.$cl.'組</option>';
     $classSelect.='<option value="0">クラスを忘れた</option></select></label>';
-    $content='<div class="grid-2">'.input('name','お名前',$u['name']??'').input('email','返信用メールアドレス',$u['email']??'','email').'</div>'.$classSelect.input('subject','件名').'<label class="field">お問い合わせ内容<textarea name="body" maxlength="10000" rows="6" required></textarea></label><label class="honeypot" aria-hidden="true">空欄にしてください<input name="website" tabindex="-1" autocomplete="off"></label>'.hidden('submission',$_SESSION['contact_nonce']).'<p class="mini-note">ログインしていなくても送信できます。内容は一般公開せず、幹事が確認します。現在は開発用のため実際の個人情報を入力しないでください。</p>'.button('問い合わせを受け付ける');
+    $content='<div class="grid-2">'.str_replace('<input ','<input placeholder="例：山田 花子" ',input('name','お名前','')).str_replace('<input ','<input placeholder="例：hanako@example.com" ',input('email','返信用メールアドレス','','email')).'</div>'.$classSelect.input('subject','件名').'<label class="field">お問い合わせ内容<textarea name="body" maxlength="10000" rows="6" required></textarea></label><label class="honeypot" aria-hidden="true">空欄にしてください<input name="website" tabindex="-1" autocomplete="off"></label>'.hidden('submission',$_SESSION['contact_nonce']).'<p class="mini-note">ログインしていなくても送信できます。内容は一般公開せず、幹事が確認します。現在は開発用のため実際の個人情報を入力しないでください。</p>'.button('問い合わせを受け付ける');
     return '<section class="section" id="contact"><div class="section-head"><div><div class="eyebrow">CONTACT US</div><h2>気になること、お気軽に。</h2><p>参加のこと、申込のこと。幹事へお寄せください。</p></div></div><div class="panel">'.form('contact',$content).'</div></section>';
 }
 function rosterView():string {
