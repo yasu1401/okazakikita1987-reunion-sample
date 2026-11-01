@@ -37,7 +37,7 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  'inquiry_replies'=>"id $id, inquiry_id INTEGER NOT NULL, actor_id INTEGER NOT NULL, body $text NOT NULL, reply_key VARCHAR(64) NOT NULL UNIQUE, created VARCHAR(30) NOT NULL",
  'mail_outbox'=>"id $id, reply_id INTEGER NOT NULL UNIQUE, to_email VARCHAR(254) NOT NULL, subject VARCHAR(200) NOT NULL, body $text NOT NULL, status VARCHAR(20) NOT NULL, error_text $text NOT NULL, created VARCHAR(30) NOT NULL, updated VARCHAR(30) NOT NULL",
  'class_contacts'=>"id $id, user_id INTEGER NOT NULL, class_no INTEGER NOT NULL, position_no INTEGER NOT NULL, UNIQUE (class_no,user_id)",
- 'albums'=>"id $id, name VARCHAR(200) NOT NULL, description VARCHAR(1000) NOT NULL, position_no INTEGER NOT NULL, visible INTEGER NOT NULL",
+ 'albums'=>"id $id, name VARCHAR(200) NOT NULL, description VARCHAR(1000) NOT NULL, position_no INTEGER NOT NULL, visible INTEGER NOT NULL, cover_file_id INTEGER NULL",
  'broadcasts'=>"id $id, actor_id INTEGER NOT NULL, subject VARCHAR(200) NOT NULL, body $text NOT NULL, target VARCHAR(20) NOT NULL, status VARCHAR(20) NOT NULL, audience_json $text NOT NULL, created VARCHAR(30) NOT NULL, queued_at VARCHAR(30) NOT NULL",
  'broadcast_messages'=>"id $id, broadcast_id INTEGER NOT NULL, user_id INTEGER NOT NULL, recipient_name VARCHAR(200) NOT NULL, to_email VARCHAR(254) NOT NULL, status VARCHAR(20) NOT NULL, error_text $text NOT NULL, created VARCHAR(30) NOT NULL, updated VARCHAR(30) NOT NULL, UNIQUE (broadcast_id,to_email)",
  'reset_tokens'=>"id $id, user_id INTEGER NOT NULL, token_hash VARCHAR(64) NOT NULL UNIQUE, expires INTEGER NOT NULL, used INTEGER NOT NULL"
@@ -49,6 +49,7 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  foreach($fileFields as $column=>$definition)if(!in_array($column,$columns,true))$db->exec("ALTER TABLE private_files ADD COLUMN $column $definition");
  $albumColumns=$mysql?array_column(all('SHOW COLUMNS FROM albums'),'Field'):array_column(all('PRAGMA table_info(albums)'),'name');
  if(!in_array('purpose',$albumColumns,true))$db->exec("ALTER TABLE albums ADD COLUMN purpose VARCHAR(30) NOT NULL DEFAULT ''");
+ if(!in_array('cover_file_id',$albumColumns,true))$db->exec('ALTER TABLE albums ADD COLUMN cover_file_id INTEGER NULL');
  q("UPDATE albums SET name='フォトアルバム' WHERE name='思い出アルバム'");
  if(!one('SELECT id FROM albums LIMIT 1'))foreach(['卒業アルバム'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
  if(!one("SELECT id FROM albums WHERE purpose='submissions'"))q("INSERT INTO albums (name,description,position_no,visible,purpose) VALUES (?,?,?,1,'submissions')",['みんなの投稿写真','最近の一枚や、身近な風景。みんなの写真とコメントをどうぞ。',50]);

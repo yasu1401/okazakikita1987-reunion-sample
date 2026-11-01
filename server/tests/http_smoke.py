@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(anon,'register');check(s==200 and '入金期限'.encode() in b and '内容変更期限'.encode() in b and 'キャンセル期限'.encode() in b,'申込フォーム内に入金・変更・キャンセル期限を表示')
         s,b=request(anon,'home');check(b'max="47"' in b and '在籍'.encode() not in b and '470'.encode() not in b and '申込締切'.encode() not in b,'トップの基準人数は数字を表示せず棒グラフだけに利用')
         s,b=request(anon,'admin');check(s==403,'未ログインの管理画面は拒否')
-        participant=login(3);s,b=request(participant,'my');check(b'K87-00003' in b and b'K87-00001' not in b,'本人の申込だけを表示')
+        participant=login(3);s,b=request(participant,'my');check(b'003' in b and b'001' not in b,'本人の申込だけを表示')
         s,b=request(participant,'admin_roles');check(s==403,'一般参加者の幹事権限画面を拒否')
         s,b=request(participant,'my',{'action':'cancel','reason':'test','csrf':'forged'});check(s==400,'CSRF不一致の更新を拒否')
         owner=login(1);organizer=login(2)

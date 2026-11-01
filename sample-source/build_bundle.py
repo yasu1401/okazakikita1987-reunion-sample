@@ -8,7 +8,7 @@ s=s.replace('<link rel="stylesheet" href="style.css">','<style>'+(src/'style.css
 s=s.replace('<link rel="stylesheet" href="home-hero.css?v=20261031-photo-gallery">','<style>'+(src/'home-hero.css').read_text()+'</style>')
 for name in ['form-assist.js','core.js','bank-account-core.js','app.js','finance.js','features.js','community-core.js','community.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js','session-ui.js','bank-account.js','class-support.js','album-ui.js','gallery-plus.js']:
     code=(src/name).read_text().replace('</script','<\\/script')
-    s=s.replace('<script src="'+name+'"></script>','<script>'+code+'</script>')
+    s=re.sub(r'<script src="'+re.escape(name)+r'(?:\?[^"]*)?"></script>',lambda _:'<script>'+code+'</script>',s)
 for p in (src/'assets').iterdir():
     mime={'.svg':'image/svg+xml','.jpg':'image/jpeg'}.get(p.suffix)
     if mime:s=s.replace('assets/'+p.name,'data:'+mime+';base64,'+base64.b64encode(p.read_bytes()).decode())

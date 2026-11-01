@@ -66,9 +66,10 @@ function saveAlbum(array $u,array $d):int {
     global $db;adminInquiry($u);$id=(int)($d['id']??0);$name=textValue($d,'name',600);$description=trim((string)($d['description']??''));requirev(mb_strlen($name)<=200&&mb_strlen($description)<=1000,'アルバム名・説明が長すぎます。');
     $position=(int)($d['position']??1);requirev($position>=1&&$position<=999,'表示順は1〜999です。');$visible=($d['visible']??'')==='yes'?1:0;
     $before=$id?one('SELECT * FROM albums WHERE id=?',[$id]):null;if($id)requirev((bool)$before,'アルバムがありません。');
-    if($id)q('UPDATE albums SET name=?,description=?,position_no=?,visible=? WHERE id=?',[$name,$description,$position,$visible,$id]);
-    else {q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,?)',[$name,$description,$position,$visible]);$id=(int)$db->lastInsertId();}
-    logv((int)$u['id'],'アルバム設定','album:'.$id,$before,['name'=>$name,'description'=>$description,'position'=>$position,'visible'=>$visible],reasonv($d));return $id;
+    $cover=(int)($d['cover_file_id']??0);if($cover){$file=one("SELECT id FROM private_files WHERE id=? AND kind='photo' AND album_id=? AND published=1 AND deleted=0",[$cover,$id]);requirev((bool)$id&&$file,'表紙写真は、そのアルバムで公開中の写真から選んでください。');}else $cover=null;
+    if($id)q('UPDATE albums SET name=?,description=?,position_no=?,visible=?,cover_file_id=? WHERE id=?',[$name,$description,$position,$visible,$cover,$id]);
+    else {q('INSERT INTO albums (name,description,position_no,visible,cover_file_id) VALUES (?,?,?,?,NULL)',[$name,$description,$position,$visible]);$id=(int)$db->lastInsertId();}
+    logv((int)$u['id'],'アルバム設定','album:'.$id,$before,['name'=>$name,'description'=>$description,'position'=>$position,'visible'=>$visible,'cover_file_id'=>$cover],reasonv($d));return $id;
 }
 function movePhoto(array $u,array $d):void {
     adminInquiry($u);$id=(int)($d['id']??0);$album=(int)($d['album_id']??0);$f=one("SELECT * FROM private_files WHERE id=? AND kind='photo'",[$id]);requirev($f&&one('SELECT id FROM albums WHERE id=?',[$album]),'写真と移動先アルバムを確認してください。');
