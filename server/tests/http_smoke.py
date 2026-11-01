@@ -1,11 +1,19 @@
 """End-to-end tests against an isolated local PHP process and disposable database."""
-import zlib, struct
+import zlib, struct, json, datetime
 import os, sys, tempfile, subprocess, time, urllib.request, urllib.parse, urllib.error, http.cookiejar, re, pathlib, sqlite3
 root=pathlib.Path(__file__).resolve().parents[1]
 php=sys.argv[1] if len(sys.argv)>1 else 'php'
 with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
     env=dict(os.environ,REUNION_TEST_DSN='sqlite:'+tmp+'/test.sqlite',REUNION_TEST_STORAGE=tmp+'/private')
     subprocess.run([php,str(root/'scripts/manage.php'),'seed'],env=env,check=True,capture_output=True)
+    with sqlite3.connect(tmp+'/test.sqlite') as setup:
+        settings=json.loads(setup.execute('SELECT data_json FROM settings WHERE id=1').fetchone()[0])
+        # Keep fixture deadlines open independently of the real event calendar.
+        today=datetime.date.today()
+        settings.update(open=str(today-datetime.timedelta(days=1)))
+        for key in ('registration','payment','change','cancel','photoEnd'):
+            settings[key]=str(today+datetime.timedelta(days=365))
+        setup.execute('UPDATE settings SET data_json=? WHERE id=1',(json.dumps(settings),))
     srv=subprocess.Popen([php,'-d','session.upload_progress.enabled=0','-S','127.0.0.1:8791','-t',str(root/'public'),str(root/'public/router.php')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     base='http://127.0.0.1:8791/?page='
     n=0
@@ -34,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         for _ in range(50):
             try:request(client(),'home');break
             except urllib.error.URLError:time.sleep(.1)
-        anon=client();s,b=request(anon,'home');check(s==200 and b'event-overview' in b and '9,500円'.encode() in b and b'participation-fee' in b and '2028年10月31日'.encode() in b and b'class-card' in b and 'みんな、集まってきています。'.encode() in b,'未ログインのトップに設定日程・会費・クラス人数')
+        anon=client();s,b=request(anon,'home');check(s==200 and b'event-overview' in b and f"{settings['fee']:,}円".encode() in b and b'participation-fee' in b and settings['dateLabel'].encode() in b and b'class-card' in b and 'みんな、集まってきています。'.encode() in b,'未ログインのトップに設定日程・会費・クラス人数')
         check('入金期限'.encode() not in b and 'キャンセル期限'.encode() not in b,'トップに入金・キャンセル期限を表示しない')
         s,b=request(anon,'register');check(s==200 and '入金期限'.encode() in b and '内容変更期限'.encode() in b and 'キャンセル期限'.encode() in b,'申込フォーム内に入金・変更・キャンセル期限を表示')
         s,b=request(anon,'home');check(b'max="47"' in b and '在籍'.encode() not in b and '470'.encode() not in b and '申込締切'.encode() not in b,'トップの基準人数は数字を表示せず棒グラフだけに利用')
@@ -43,6 +51,14 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(participant,'admin_roles');check(s==403,'一般参加者の幹事権限画面を拒否')
         s,b=request(participant,'my',{'action':'cancel','reason':'test','csrf':'forged'});check(s==400,'CSRF不一致の更新を拒否')
         owner=login(1);organizer=login(2)
+        for account,label,visible in [(anon,'未ログイン',False),(participant,'参加者',False),(organizer,'幹事',True),(owner,'管理者',True)]:
+            for page in ('home','my','register'):
+                status,body=request(account,page)
+                header=re.search(rb'<header>(.*?)</header>',body,re.S)
+                check(status==200 and header is not None and (b'href="?page=admin"' in header[1])==visible,label+'の'+page+'で幹事メニューの権限表示')
+        logout_client=login(2)
+        s,b=post(logout_client,'home','logout')
+        check(s==200 and b'href="?page=admin"' not in re.search(rb'<header>(.*?)</header>',b,re.S)[1],'ログアウト後は幹事メニューを表示しない')
         values={'date':'2026-10-29','category':'印刷費','payee':'架空店','purpose':'資料','amount':'1000','reason':'操作検証'}
         receipt=b'%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF\n'
         s,b=post(organizer,'admin_accounting','expense',values,{'receipt':('sample.pdf','application/pdf',receipt)});check(s==200,'経費と領収書を同時保存')
@@ -120,8 +136,8 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=post(signup,'register','register',values);check(s==200,'表示名未指定・ひらがな半角名義で架空申込')
         uid=con.execute("select id from users where email='kana-form@example.test'").fetchone()[0]
         import json
-        stored=json.loads(con.execute('select data_json from registrations where user_id=?',(uid,)).fetchone()[0]);check(stored['display']=='見本 太郎' and stored['payer']=='ヤマダ タロウ','サーバーでも表示名を補完・名義を統一して保存')
-        s,b=post(signup,'edit','edit',{**values,'name':'見本 次郎','display':'卒業時の見本名','payer':'ﾐﾎﾝ ｼﾞﾛｳ'});stored=json.loads(con.execute('select data_json from registrations where user_id=?',(uid,)).fetchone()[0]);check(s==200 and stored['display']=='卒業時の見本名' and stored['payer']=='ミホン ジロウ','表示名の手動変更を保持して保存')
+        stored=json.loads(con.execute('select data_json from registrations where user_id=?',(uid,)).fetchone()[0]);check(stored['class']==1 and con.execute('select class_no from registrations where user_id=?',(uid,)).fetchone()[0]==1 and stored['display']=='見本 太郎' and stored['payer']=='ヤマダ タロウ','サーバーでも表示名を補完・名義を統一して保存')
+        s,b=post(signup,'edit','edit',{**values,'class':'10','name':'見本 次郎','display':'卒業時の見本名','payer':'ﾐﾎﾝ ｼﾞﾛｳ'});stored=json.loads(con.execute('select data_json from registrations where user_id=?',(uid,)).fetchone()[0]);check(s==200 and stored['class']==10 and con.execute('select class_no from registrations where user_id=?',(uid,)).fetchone()[0]==10 and stored['display']=='卒業時の見本名' and stored['payer']=='ミホン ジロウ','表示名の手動変更を保持して保存')
         s,b=post(signup,'edit','edit',{**values,'payer':'山田 太郎'});check(s==400,'直接POSTした漢字名義も拒否')
         s,b=request(anon,'register');check('メールアドレスとパスワードで'.encode() in b and '全員へのお知らせ'.encode() in b,'申込画面にログインと一斉連絡先の案内')
         albumclient=client();s,b=request(albumclient,'gallery&album=1');check(s==200 and b'name="next" value="gallery"' in b,'アルバムからログインすると行先を保持')
@@ -197,7 +213,7 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         s,b=request(owner,'admin&class_filter=0');check('クラス確認見本'.encode() not in b,'修正後はクラス未確認の一覧から除外')
         s,b=request(fresh,'my')
         check(b.count('>申込期限</dt>'.encode())==1 and b.count('>入金期限（振込期限）</dt>'.encode())==1 and b.count('>内容変更期限</dt>'.encode())==1 and b.count('>キャンセル期限</dt>'.encode())==1,'未入金の本人画面は振込先と各期限を一か所で表示')
-        payment_csv='管理情報\n日付,摘要,摘要内容,支払い金額,預かり金額,差引残高,メモ,未資金化区分,入払区分\n20261031,振込,支払表示テスト,,9500,500000,,0,入金\n'.encode()
+        payment_csv=f'管理情報\n日付,摘要,摘要内容,支払い金額,預かり金額,差引残高,メモ,未資金化区分,入払区分\n20261031,振込,支払表示テスト,,{amount},500000,,0,入金\n'.encode()
         s,b=post(owner,'admin_bank','import',{}, {'csv':('paid-view.csv','text/csv',payment_csv)});assert s==200
         tid=con.execute('select max(id) from bank_transactions').fetchone()[0]
         s,b=post(owner,'admin_bank','bank_decide',{'id':tid,'state':'confirmed','reason':'画面確認用の見本入金'});assert s==200

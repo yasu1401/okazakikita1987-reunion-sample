@@ -1,9 +1,16 @@
 <?php
 putenv('REUNION_TEST_DSN=sqlite::memory:');putenv('REUNION_TEST_STORAGE='.sys_get_temp_dir().'/kita87-test-private');require __DIR__.'/../src/bootstrap.php';require APP_ROOT.'/src/domain.php';schema();
+$testSettings=setting();$testSettings['open']=date('Y-m-d',strtotime('-1 day'));foreach(['registration','payment','change','cancel','photoEnd'] as $key)$testSettings[$key]=date('Y-m-d',strtotime('+1 year'));q('UPDATE settings SET data_json=? WHERE id=1',[jsonv($testSettings)]);
 $n=0;function check(bool $yes,string $message):void{global $n;if(!$yes)throw new RuntimeException('FAIL '.$message);echo 'PASS '.(++$n).' '.$message."\n";}
 function denied(callable $f,string $message):void{try{$f();}catch(DomainException $e){check(true,$message);return;}throw new RuntimeException('Expected rejection: '.$message);}
 $person=fn($i)=>['email'=>'test'.$i.'@example.test','password'=>'Sample1987!','name'=>'架空'.$i,'kana'=>'カクウ','class'=>$i,'address'=>'架空市','phone'=>'000','payer'=>'ミホン','public'=>'yes','display'=>'見本'.$i];
 for($i=1;$i<=3;$i++)atomic(fn()=>registerPerson($person($i)));q("UPDATE users SET role='owner' WHERE id=1");q("UPDATE users SET role='organizer' WHERE id=2");$a=publicUser(1);$b=publicUser(2);$p=publicUser(3);
+foreach([1,2,3] as $uid){$r=registrationFor($uid);check((int)$r['class_no']===$uid&&obj($r['data_json'])['class']===$uid,'選択クラスを列と申込内容に一致して保存 #'.$uid);}
+foreach(range(0,10) as $cl)check(participantData([...$person(3),'class'=>(string)$cl])['class']===$cl,'クラス0〜10の入力値を保持 #'.$cl);
+foreach(['',-1,11,'3x',null] as $invalid)denied(fn()=>participantData([...$person(3),'class'=>$invalid]),'未選択・不正クラスを拒否');
+atomic(fn()=>editRegistration($p,[...$person(3),'class'=>'10']));$edited=registrationFor(3);check((int)$edited['class_no']===10&&obj($edited['data_json'])['class']===10,'本人のクラス変更を保存');
+atomic(fn()=>editRegistration($p,$person(3)));
+check(participantData([...$person(3),'payer'=>''])['payer']==='カクウ','振込名義の未指定時はふりがなで補完');
 check(password_verify('Sample1987!',one('SELECT password_hash FROM users WHERE id=3')['password_hash']),'ハッシュ化して保存・検証');denied(fn()=>passwordv('1234'),'4桁のみ拒否');denied(fn()=>atomic(fn()=>changeRole($p,3,'organizer','自己昇格')),'本人の自己昇格を拒否');atomic(fn()=>changeRole($a,3,'organizer','代表幹事の指定'));check(publicUser(3)['role']==='organizer','代表幹事が権限付与');atomic(fn()=>changeRole($a,3,'participant','権限解除'));
 $header=implode(',',CSV_HEADERS);$source="架空管理行\n$header\n20261029,振込,003,,8000,8000,,0,入金\n20261029,振込,同名義,,8000,16000,,0,入金\n20261029,振込,同名義,,8000,24000,,0,入金\n20261029,支払,見本経費,1000,,23000,,,出金\n20261399,振込,不正日付,,5,23005,,0,入金\n";
 $r=atomic(fn()=>importBank($a,$source,'test.csv'));check($r['count']===4&&count($r['errors'])===1&&$r['managementRows']===1,'管理行・見出し・エラー・入出金');check(atomic(fn()=>importBank($a,$source,'same.csv'))['repeated'],'同一ファイルを抑止');$overlap="$header\n20261029,振込,同名義,,8000,16000,,0,入金\n";$o=atomic(fn()=>importBank($a,$overlap,'overlap.csv'));check($o['duplicates']===1&&(int)one('SELECT COUNT(*) n FROM bank_transactions')['n']===5,'期間重複は候補保持・別残高の同日同額同名義を保持');
