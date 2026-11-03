@@ -2,6 +2,7 @@
 declare(strict_types=1);
 function registrationGuide(array $p,int $paid,int $balance,string $today,string $paymentDate):array {
  $g=['tone'=>'waiting','label'=>'申込受付済み','title'=>'会費のお振り込みをお願いします','message'=>'下記の振込先・入金期限をご確認のうえ、会費をお振り込みください。','balanceLabel'=>'これからお振り込みいただく金額','balanceValue'=>($balance>0?'あと':'').number_format(max(0,$balance)).'円','note'=>'すでにお振り込みの場合は、幹事の確認・画面への反映をお待ちください。重ねて振り込む必要はありません。'];
+ if($p['status']==='rejoin_requested'){$g['tone']='review';$g['label']='再参加申請受付済み';$g['title']='幹事が再参加の希望を確認しています';$g['message']='定員・返金状況を確認してから参加予定に戻します。';$g['balanceLabel']='再参加のご案内';$g['balanceValue']='幹事確認待ち';$g['note']='同じ申込番号を引き継ぎます。承認後の会費案内をご確認ください。';return $g;}
  if($p['status']==='cancel_requested'||$p['status']==='cancelled') {
   $g['tone']='review';$g['label']=$p['status']==='cancel_requested'?'欠席申請受付済み':'欠席への変更完了';$g['title']=$p['status']==='cancel_requested'?'幹事が欠席の申請を確認しています':'欠席への変更が完了しました';
   $g['message']=$paid>0?'お支払い済みの会費について、返金の有無・金額・手続きを幹事が確認します。':'今後のお支払いについては、幹事からの案内をご確認ください。';

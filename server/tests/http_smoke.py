@@ -246,5 +246,54 @@ with tempfile.TemporaryDirectory(prefix='kita-http-') as tmp:
         check(s==200 and '申込受付済み'.encode() in b,'3文字のパスワードで参加申込を保存')
         short_login=client();s,b=post(short_login,'login','login',{'email':'three-character@example.test','password':'123'})
         check(s==200 and 'クラス確認見本'.encode() in b,'3文字で設定したパスワードで本人ログイン')
+        # Attendance recovery and refund ledger use the same registration and shared bank remainder.
+        target=con.execute("select r.id,r.amount,r.user_id from registrations r join users u on u.id=r.user_id where u.email='three-character@example.test'").fetchone()
+        target_id,target_amount,target_user=target
+        s,b=post(short_password,'my','cancel',{'reason':'再参加試験のため欠席申請'});check(s==200 and b'name="action" value="withdraw_cancel"' in b,'欠席申請後に本人の取り消しフォームを表示')
+        rev=con.execute('select revision from registrations where id=?',(target_id,)).fetchone()[0]
+        s,b=post(short_password,'my','withdraw_cancel',{'revision':rev-1,'reason':'古い画面'});check(s==400,'古い版の欠席取り消しをHTTPで拒否')
+        s,b=post(short_password,'my','withdraw_cancel',{'revision':rev,'reason':'都合がついた'});check(s==200 and con.execute('select status from registrations where id=?',(target_id,)).fetchone()[0]=='active','本人が欠席申請を取り消して参加予定へ戻せる')
+        s,b=post(short_password,'my','cancel',{'reason':'返金試験のため欠席'});assert s==200
+        s,b=post(owner,'admin_refunds','cancel_decide',{'id':target_id,'decision':'approve','reason':'欠席確定'});check(s==200,'幹事が欠席を確定')
+        # Allocate a transfer received before cancellation; the database fixture is active only for the allocation.
+        con.execute("update registrations set status='active' where id=?",(target_id,));con.commit()
+        bank_date=datetime.date.today().strftime('%Y%m%d')
+        refund_csv=f'日付,摘要,摘要内容,支払い金額,預かり金額,差引残高,メモ,未資金化区分,入払区分\n{bank_date},振込,再参加テスト,,{target_amount},900000,,0,入金\n{bank_date},出金,返金テスト,{target_amount},,891000,,0,出金\n'.encode()
+        s,b=post(owner,'admin_bank','import',{}, {'csv':('refund-fixture.csv','text/csv',refund_csv)});assert s==200
+        bank_in,bank_out=[r[0] for r in con.execute('select id from bank_transactions order by id desc limit 2').fetchall()[::-1]]
+        for bid in (bank_in,bank_out):
+            s,b=post(owner,'admin_bank','bank_decide',{'id':bid,'state':'confirmed','reason':'架空明細確認'});assert s==200
+        s,b=post(owner,'admin_bank','allocate',{'bank_id':bank_in,'registration_id':target_id,'amount':target_amount,'reason':'取消前の入金'});assert s==200
+        con.execute("update registrations set status='cancelled' where id=?",(target_id,));con.commit()
+        s,b=request(short_password,'admin_refunds');check(s==403,'参加者から返金管理の閲覧を拒否')
+        plan={'registration_id':target_id,'amount':target_amount,'request_key':'7'*32,'reason':'全額返金の見本'}
+        s,b=post(short_password,'my','refund_plan',plan);check(s==400,'参加者の返金予定登録を拒否')
+        s,b=post(owner,'admin_refunds','refund_plan',plan);check(s==200,'幹事が返金予定を登録')
+        refund_id=con.execute('select max(id) from refunds').fetchone()[0]
+        s,b=post(owner,'admin_refunds','refund_plan',plan);check(s==200 and con.execute('select count(*) from refunds').fetchone()[0]==1,'返金予定の二重送信を重複保存しない')
+        s,b=post(owner,'admin_refunds','refund_plan',{**plan,'request_key':'8'*32,'amount':1});check(s==400,'予定済み返金を超える登録を拒否')
+        rev=con.execute('select revision from registrations where id=?',(target_id,)).fetchone()[0]
+        s,b=post(short_password,'my','request_rejoin',{'revision':rev,'reason':'再参加を希望'});check(s==200 and '再参加申請受付済み'.encode() in b,'本人から再参加を申請')
+        s,b=post(owner,'admin_refunds','rejoin_decide',{'id':target_id,'decision':'approve','reason':'未送金の予定が残る'});check(s==400,'未送金返金を残した再参加承認を拒否')
+        s,b=post(owner,'admin_refunds','rejoin_decide',{'id':target_id,'decision':'reject','reason':'返金後に再確認'});assert s==200
+        s,b=post(owner,'admin_refunds','refund_record',{'id':refund_id,'date':str(datetime.date.today()),'reference':'架空送金番号','reason':'銀行側で実施した内容の記録'});check(s==200,'送金済み内容を記録（実送金なし）')
+        s,b=request(short_password,'my');check('返金記録合計'.encode() in b and '銀行照合待ち'.encode() in b,'本人画面に返金記録と銀行照合待ちを表示')
+        s,b=post(owner,'admin_refunds','refund_link',{'id':refund_id,'bank_id':bank_out,'amount':target_amount,'reason':'出金と返金が一致'});check(s==200,'返金記録と銀行出金を照合')
+        s,b=post(owner,'admin_refunds','refund_link',{'id':refund_id,'bank_id':bank_out,'amount':1,'reason':'二重'});check(s==400,'返金の二重割当をHTTPで拒否')
+        s,b=post(owner,'admin_bank','allocate',{'bank_id':bank_out,'expense_id':eid,'amount':1,'reason':'同じ銀行出金を経費に割当'});check(s==400,'返金済み出金の経費への重複割当を拒否')
+        s,b=post(owner,'admin_refunds','refund_undo',{'id':refund_id,'reason':'照合中の訂正'});check(s==400,'出金照合中の返金記録訂正を拒否')
+        rev=con.execute('select revision from registrations where id=?',(target_id,)).fetchone()[0]
+        s,b=post(short_password,'my','request_rejoin',{'revision':rev,'reason':'改めて再参加'});assert s==200
+        s,b=post(owner,'admin_refunds','rejoin_decide',{'id':target_id,'decision':'approve','reason':'定員と返金記録を確認'});check(s==200,'幹事が再参加を承認')
+        s,b=request(short_password,'my');check('返金差引後の入金額'.encode() in b and '会費のお振り込みをお願いします'.encode() in b and '会費の振込先'.encode() in b,'再参加時は返金を差し引いて追加の会費を案内')
+        check(con.execute('select id,amount from registrations where user_id=?',(target_user,)).fetchone()==(target_id,target_amount),'再参加しても申込番号と当初会費を維持')
+        s,b=request(owner,'export&kind=refunds');check(s==200 and '架空送金番号'.encode() in b,'返金一覧CSVを出力')
+        income_allocation=con.execute('select id from allocations where bank_id=?',(bank_in,)).fetchone()[0]
+        s,b=post(owner,'admin_bank','reverse',{'id':income_allocation,'reason':'返金の根拠入金を消す'});check(s==400,'返金の根拠入金の取消を拒否')
+        link_id=con.execute('select max(id) from refund_links').fetchone()[0]
+        s,b=post(owner,'admin_refunds','refund_unlink',{'id':link_id,'reason':'照合訂正'});check(s==200,'返金の銀行照合を理由付きで取消')
+        s,b=post(owner,'admin_refunds','refund_undo',{'id':refund_id,'reason':'誤記を訂正'});check(s==200,'照合を外して返金記録を訂正')
+        s,b=post(owner,'admin_refunds','refund_cancel',{'id':refund_id,'reason':'誤った予定を取消'});check(s==200,'返金予定を履歴付きで取消')
+        check(con.execute('select count(*) from audit_logs where action like ?',('%返金%',)).fetchone()[0]>=6,'返金と訂正の履歴を保存')
         print('ALL',n,'HTTP CHECKS PASSED')
     finally:srv.terminate();srv.wait()
