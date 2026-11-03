@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-const DUTY_ROLES=['lead'=>'全体統括','deputy'=>'副統括','accounting'=>'会計担当','system'=>'システム担当','publicity'=>'広報担当','venue'=>'会場担当','planning'=>'企画運営担当','guest'=>'恩師・来賓対応','support'=>'応援者・協力者対応','reception'=>'受付担当','mc'=>'司会','photography'=>'写真撮影','recording'=>'記録担当','reunion'=>'二次会担当','accessibility'=>'案内・配慮対応','other'=>'その他'];
+const DUTY_ROLES=['lead'=>'全体統括','deputy'=>'副統括','classInquiry'=>'クラスの問い合わせ担当','accounting'=>'会計担当','system'=>'システム担当','publicity'=>'広報担当','venue'=>'会場担当','planning'=>'企画運営担当','guest'=>'恩師・来賓対応','support'=>'応援者・協力者対応','reception'=>'受付担当','mc'=>'司会','photography'=>'写真撮影','recording'=>'記録担当','reunion'=>'二次会担当','accessibility'=>'案内・配慮対応','other'=>'その他'];
 const DUTY_STATUS=['planned'=>'依頼・調整中','active'=>'担当決定','done'=>'完了','inactive'=>'担当解除'];
 function saveDuty(array $u,array $d):int {
  global $db;requirev($u['role']==='owner','担当の設定は管理者が行います。');$id=(int)($d['id']??0);$record=$id?one('SELECT * FROM duties WHERE id=?',[$id]):null;if($id)requirev((bool)$record,'担当記録がありません。');if($record)requirev((int)($d['revision']??0)===(int)$record['revision'],'他の操作で更新されています。画面を開き直してください。');

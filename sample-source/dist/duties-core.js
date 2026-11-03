@@ -1,7 +1,7 @@
 /* Browser-local fictional demo. Assignments never grant account permissions. */
 (function(root){'use strict';
 const R=root.Reunion;
-const ROLES={lead:'全体統括',deputy:'副統括',accounting:'会計担当',system:'システム担当',publicity:'広報担当',venue:'会場担当',planning:'企画運営担当',guest:'恩師・来賓対応',support:'応援者・協力者対応',reception:'受付担当',mc:'司会',photography:'写真撮影',recording:'記録担当',reunion:'二次会担当',accessibility:'案内・配慮対応',other:'その他'};
+const ROLES={lead:'全体統括',deputy:'副統括',classInquiry:'クラスの問い合わせ担当',accounting:'会計担当',system:'システム担当',publicity:'広報担当',venue:'会場担当',planning:'企画運営担当',guest:'恩師・来賓対応',support:'応援者・協力者対応',reception:'受付担当',mc:'司会',photography:'写真撮影',recording:'記録担当',reunion:'二次会担当',accessibility:'案内・配慮対応',other:'その他'};
 const STATUS={planned:'依頼・調整中',active:'担当決定',done:'完了',inactive:'担当解除'};
 function prepare(s){s.duties??=[];}
 function staff(s,uid,write=false){const p=s.people.find(p=>p.id===Number(uid));if(!p||!(write?p.role==='owner':['owner','organizer'].includes(p.role)))throw new Error(write?'担当の設定は管理者が行います。':'幹事権限が必要です。');return p;}
