@@ -1,0 +1,6 @@
+<?php
+/** Development-only fictional fixtures. Never called by schema or public requests. */
+function seedDemoDuties():int {
+ global $config;requirev($config['mode']==='development','開発環境専用です。');foreach(all('SELECT email FROM users') as $u)requirev((bool)preg_match('/^sample[0-9]+@example\.test$/D',$u['email']),'見本アカウントだけのDBで実行してください。');$owner=one("SELECT id,name,email,role FROM users WHERE role='owner' ORDER BY id LIMIT 1");requirev((bool)$owner,'先にseedしてください。');$plan=obj(file_get_contents(__DIR__.'/duties-demo.json'));$count=0;
+ atomic(function()use($owner,$plan,&$count){$s=setting();if(($s['demoDutiesVersion']??0)===1)return;$existing=array_column(dutyRecords(),'roleKey');foreach($plan as $item){if(in_array($item['roleKey'],$existing,true))continue;$p=!empty($item['email'])?one("SELECT u.id FROM users u JOIN registrations r ON r.user_id=u.id WHERE u.email=? AND r.status='active'",[$item['email']]):null;if(!empty($item['email'])&&!$p)continue;saveDuty($owner,[...$item,'kind'=>$p?'member':'external','userId'=>$p['id']??null,'customRole'=>$item['roleKey']==='other'?'案内資料作成':'','note'=>'架空の担当割当見本。実際の幹事体制ではありません。','reason'=>'開発用の架空担当を割当']);$count++;}$s['demoDutiesVersion']=1;q('UPDATE settings SET data_json=? WHERE id=1',[jsonv($s)]);});return $count;
+}

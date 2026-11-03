@@ -6,7 +6,7 @@ src=root/'dist';out=root/'github-pages';out.mkdir(exist_ok=True)
 s=(src/'index.html').read_text()
 s=s.replace('<link rel="stylesheet" href="style.css">','<style>'+(src/'style.css').read_text()+'</style>')
 s=s.replace('<link rel="stylesheet" href="home-hero.css?v=20261031-photo-gallery">','<style>'+(src/'home-hero.css').read_text()+'</style>')
-for name in ['form-assist.js','core.js','bank-account-core.js','app.js','finance.js','lifecycle-core.js','features.js','community-core.js','community.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js','session-ui.js','bank-account.js','class-support.js','album-ui.js','gallery-plus.js','lifecycle.js','duties-core.js','duties.js']:
+for name in ['form-assist.js','core.js','bank-account-core.js','app.js','finance.js','lifecycle-core.js','features.js','community-core.js','community.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js','session-ui.js','bank-account.js','class-support.js','album-ui.js','gallery-plus.js','lifecycle.js','duties-core.js','duties-demo.js','duties.js']:
     code=(src/name).read_text().replace('</script','<\\/script')
     s=re.sub(r'<script src="'+re.escape(name)+r'(?:\?[^"]*)?"></script>',lambda _:'<script>'+code+'</script>',s)
 for p in (src/'assets').iterdir():
