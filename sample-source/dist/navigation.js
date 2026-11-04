@@ -71,6 +71,7 @@ function remember(ev){const el=ev.target.closest('button,a,input,select,form');i
  const inDialog=!!el.closest('dialog'),f=ev.type==='submit'?ev.target:el.closest('form');
  const c=inDialog?(modalOrigin||capture(null)):capture(el);
  pending={...c,from:location.hash,href:el.closest('a')?.getAttribute('href')||'',label:text(el),kind:'operation',action:formAction(f)};
+ if(ev.type==='click'&&el.closest('header #mainNav,header .brand'))pending.kind='main-menu';
  if(el.matches('[data-action="person-detail"],[data-action="transaction-detail"]'))modalOrigin=c;
  if(el.matches('[data-action="import-fixture"]')||el.id==='bankFile')pending.kind='import';
  if(el.id==='photoFiles')pending.kind='photo-upload';
@@ -85,20 +86,20 @@ window.addEventListener('click',remember,true);window.addEventListener('submit',
 // Native validation should reveal the first invalid field without changing pages.
 let invalidScheduled=false;window.addEventListener('invalid',ev=>{if(invalidScheduled)return;const form=ev.target.form;if(!form)return;invalidScheduled=true;queueMicrotask(()=>{invalidScheduled=false;const field=form.querySelector('input:invalid,select:invalid,textarea:invalid');if(field){field.focus({preventScroll:true});field.scrollIntoView({block:'center',behavior:'instant'});}});},true);
 if(spa){if('scrollRestoration' in history)history.scrollRestoration='manual';const base=route;route=function(){const hash=location.hash||'#/',different=hash!==rendered,fresh=pending&&Date.now()-pending.at<180000?pending:null,c=fresh||capture(document.activeElement),token=++sequence;pending=null;base();decorate();const success=successfulTarget(fresh);
- if(success)focusAt(success);else if(different||fresh?.href===hash){const target=destination();if(target)focusAt(target);else if(routeInfo().path==='/')window.scrollTo({top:0,left:0,behavior:'instant'});}else restore(c);
+ if(fresh?.kind==='main-menu')window.scrollTo({top:0,left:0,behavior:'instant'});else if(success)focusAt(success);else if(different||fresh?.href===hash){const target=destination();if(target)focusAt(target);else if(routeInfo().path==='/')window.scrollTo({top:0,left:0,behavior:'instant'});}else restore(c);
  rendered=hash;const dlg=document.querySelector('dialog[open]');if(dlg)window.scrollTo({left:c.x,top:c.y,behavior:'instant'});
  // An immediate route() followed by hashchange must not lose the restored context.
  queueMicrotask(()=>{if(token!==sequence)return;const error=root()?.querySelector('.error-text:not(:empty)');if(error&&fresh&&fresh.kind==='operation'&&error.getBoundingClientRect().height)focusAt(error);});
  };window.removeEventListener('hashchange',base);window.addEventListener('hashchange',route);route();
  // Re-selecting the current page still opens its actual content.
- window.addEventListener('click',ev=>{const a=ev.target.closest('a');if(!a||ev.defaultPrevented||ev.button!==0||ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.altKey||a.getAttribute('href')?.startsWith('#/')!==true||a.hash!==location.hash)return;ev.preventDefault();focusAt(destination());});
+ window.addEventListener('click',ev=>{const a=ev.target.closest('a');if(!a||ev.defaultPrevented||ev.button!==0||ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.altKey||a.getAttribute('href')?.startsWith('#/')!==true||a.hash!==location.hash)return;ev.preventDefault();if(a.closest('header #mainNav,header .brand')){pending=null;window.scrollTo({top:0,left:0,behavior:'instant'});}else focusAt(destination());});
 }else{
  decorate();let saved=null;try{saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');sessionStorage.removeItem(storageKey);}catch{}
- const page=new URL(location.href).searchParams.get('page')||'home';if(saved&&(Date.now()-saved.at>=180000||saved.page!==page))saved=null;let operationResult=null;
+ const page=new URL(location.href).searchParams.get('page')||'home',fromMainMenu=saved?.kind==='main-menu'&&Date.now()-saved.at<180000;if(saved&&(Date.now()-saved.at>=180000||saved.page!==page))saved=null;let operationResult=null;
  if(saved?.action==='import'){operationResult=Array.from(root().querySelectorAll('summary')).find(x=>/^取込 #/.test(text(x)));if(operationResult)operationResult.closest('details').open=true;}
  else if(saved?.action==='photo')operationResult=headingNamed(/写真・投稿コメントの編集/);
  else if(saved?.action==='broadcast_preview')operationResult=destination();
- const explicit=location.hash&&document.getElementById(location.hash.slice(1));if(explicit)focusAt(explicit);else if(operationResult)focusAt(operationResult);else if(saved&&Date.now()-saved.at<180000&&saved.page===page&&saved.action){restore(saved);}else focusAt(destination());
+ const explicit=location.hash&&document.getElementById(location.hash.slice(1));if(fromMainMenu)window.scrollTo({top:0,left:0,behavior:'instant'});else if(explicit)focusAt(explicit);else if(operationResult)focusAt(operationResult);else if(saved&&Date.now()-saved.at<180000&&saved.page===page&&saved.action){restore(saved);}else focusAt(destination());
  if(saved){const error=root()?.querySelector('.error-text,.notice[role="alert"]');if(error&&text(error))focusAt(error);}
 }
 // Inline filters redraw only their results; keep text searches steady while typing.
