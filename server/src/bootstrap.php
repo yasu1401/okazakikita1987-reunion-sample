@@ -56,6 +56,7 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  q("UPDATE albums SET name='フォトアルバム' WHERE name='思い出アルバム'");
  if(!one('SELECT id FROM albums LIMIT 1'))foreach(['卒業アルバム'] as $i=>$name)q('INSERT INTO albums (name,description,position_no,visible) VALUES (?,?,?,1)',[$name,'',$i+1]);
  if(!one("SELECT id FROM albums WHERE purpose='submissions'"))q("INSERT INTO albums (name,description,position_no,visible,purpose) VALUES (?,?,?,1,'submissions')",['みんなの投稿写真','最近の一枚や、身近な風景。みんなの写真とコメントをどうぞ。',50]);
+ foreach(all("SELECT id FROM expenses WHERE category='システム運営費'") as $legacy){$updated=q("UPDATE expenses SET category='事務決済費' WHERE id=? AND category='システム運営費'",[$legacy['id']]);if($updated->rowCount()===1)logv(null,'経費費目を統合','expense:'.$legacy['id'],['category'=>'システム運営費'],['category'=>'事務決済費'],'旧「システム運営費」を「事務決済費」へ移行');}
 }
 function atomic(callable $fn):mixed{global $db;$db->beginTransaction();try{q('UPDATE app_lock SET version=version+1 WHERE id=1');$r=$fn();$db->commit();return $r;}catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}}
 function logv(?int $actor,string $action,string $entity,mixed $before,mixed $after,string $reason):void{q('INSERT INTO audit_logs (actor_id,action,entity,before_json,after_json,reason,created) VALUES (?,?,?,?,?,?,?)',[$actor,$action,$entity,jsonv($before),jsonv($after),$reason,nowv()]);}

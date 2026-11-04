@@ -5,9 +5,11 @@ const OUTBOX_STATUS=['development'=>'開発用・未送信','queued'=>'送信待
 function inquiryClassLabel(mixed $value):string {return $value===null?'未登録（以前の問い合わせ）':((int)$value===0?'クラスを忘れた':'3年'.(int)$value.'組');}
 function contactView(?array $u):string {
     $_SESSION['contact_nonce']??=bin2hex(random_bytes(16));
-    $classSelect='<label class="field">卒業時のクラス<select name="class" class="class-select" required><option value="" disabled selected>選択してください</option>';
+    $classSelect='<label class="field">卒業時のクラス<select name="class" class="class-select" data-class-contact-selector required><option value="" disabled selected>選択してください</option>';
     for($cl=1;$cl<=10;$cl++)$classSelect.='<option value="'.$cl.'">3年'.$cl.'組</option>';
     $classSelect.='<option value="0">クラスを忘れた</option></select></label>';
+    $classContactsByClass=[];for($cl=1;$cl<=10;$cl++)$classContactsByClass[(string)$cl]=array_column(classContacts($cl),'name');
+    $classSelect.='<p class="mini-note" data-class-contact-hint data-class-contacts="'.h(jsonv($classContactsByClass)).'" aria-live="polite">クラスを選ぶと、担当するクラス幹事が表示されます。</p>';
     $content='<div class="grid-2">'.str_replace('<input ','<input placeholder="例：山田 花子" ',input('name','お名前','')).str_replace('<input ','<input placeholder="例：hanako@example.com" ',input('email','返信用メールアドレス','','email')).'</div>'.$classSelect.input('subject','件名').'<label class="field">お問い合わせ内容<textarea name="body" maxlength="10000" rows="6" required></textarea></label><label class="honeypot" aria-hidden="true">空欄にしてください<input name="website" tabindex="-1" autocomplete="off"></label>'.hidden('submission',$_SESSION['contact_nonce']).'<p class="mini-note">ログインしていなくても送信できます。内容は一般公開せず、幹事が確認します。現在は開発用のため実際の個人情報を入力しないでください。</p>'.button('問い合わせを受け付ける');
     return '<section class="section" id="contact"><div class="section-head"><div><div class="eyebrow">CONTACT US</div><h2>気になること、お気軽に。</h2><p>参加のこと、申込のこと。幹事へお寄せください。</p></div></div><div class="panel">'.form('contact',$content).'</div></section>';
 }
@@ -23,7 +25,7 @@ function rosterView():string {
 }
 function contactsForPerson(array $p):string {
     $cl=(int)$p['class_no'];if($cl===0)return '<section class="panel"><h2>卒業時のクラスを確認中です</h2><p>幹事が確認後に修正します。心当たりがあれば<a href="?page=home#contact">問い合わせフォーム</a>でお知らせください。</p></section>';$contacts=classContacts($cl);$names=$contacts?implode('',array_map(fn($c)=>'<div class="name-card"><small>3年'.$cl.'組 クラス幹事</small><strong>'.h($c['name']).'</strong></div>',$contacts)):'<p>クラス幹事は決まり次第ご案内します。</p>';
-    return '<section class="panel"><div class="eyebrow">YOUR CLASS ORGANIZERS</div><h2>3年'.$cl.'組のクラス幹事</h2><div class="roster">'.$names.'</div><p>ご連絡は<a href="?page=home#contact">問い合わせフォーム</a>をご利用ください。</p></section>';
+    return '<section class="panel"><div class="eyebrow">YOUR CLASS ORGANIZERS</div><h2>3年'.$cl.'組のクラス幹事</h2><div class="roster">'.$names.'</div><p>ご連絡は問い合わせフォームをご利用ください。</p><a class="btn btn-outline" href="?page=contact#contact">お問い合わせフォームへ →</a></section>';
 }
 function contactsAdminView():string {
     $cl=(int)($_GET['class']??1);$cl=max(1,min(10,$cl));$html='<div class="page-title"><div class="eyebrow">CLASS ORGANIZERS</div><h1 id="class-contact-editor">クラス幹事を、ご案内。</h1><p>管理者が各クラス最大3名を指定します。表示の指定だけでは管理権限は増えません。</p></div><div class="class-tabs">';

@@ -48,14 +48,6 @@
     "class": 0
   },
   {
-    "roleKey": "publicity",
-    "email": "sample19@example.test",
-    "scope": "開催案内・LINE連絡",
-    "description": "案内文の準備、LINEグループへの連絡",
-    "status": "active",
-    "class": 0
-  },
-  {
     "roleKey": "venue",
     "email": "sample50@example.test",
     "scope": "ホテルとの打ち合わせ",
@@ -133,14 +125,6 @@
     "scope": "二次会のご案内",
     "description": "会場候補と参加希望の確認",
     "status": "planned",
-    "class": 0
-  },
-  {
-    "roleKey": "accessibility",
-    "email": "sample68@example.test",
-    "scope": "会場誘導・配慮",
-    "description": "受付から会場までの案内、配慮事項の共有",
-    "status": "active",
     "class": 0
   },
   {
