@@ -51,7 +51,7 @@ function destination(){const {path,params}=routeInfo();if(!spa&&location.hash&&d
  if(path==='/admin'&&['query','class_filter','status_filter','payment_filter'].some(k=>params.has(k)))return root().querySelector('[role="status"]')||root().querySelector('.table-wrap');
  if(path==='/admin/inquiries'&&params.has('status'))return root().querySelector('.table-wrap');
  if(path.startsWith('/admin'))return firstAdminContent();
- if(path==='/my')return root().querySelector('.registration-guide')||root().querySelector('h1');
+ if(path==='/my')return document.getElementById('my-person-heading')||root().querySelector('.registration-guide')||root().querySelector('h1');
  return root()?.querySelector('.page-title h1,h1,h2');
 }
 function successfulTarget(intent){if(!intent||!spa)return null;
