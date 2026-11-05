@@ -92,3 +92,4 @@ select.class-select option[value=""]{color:#777f7b;}
 .postal-choices[hidden]{display:none!important}
 
 #photo-post{scroll-margin-top:24px}
+.album-lightbox a[hidden]{display:none!important}

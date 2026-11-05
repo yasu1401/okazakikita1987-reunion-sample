@@ -51,6 +51,7 @@ function schema():void{global $db;$mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME
  $fileFields=['photo_title'=>"VARCHAR(200) NOT NULL DEFAULT ''",'caption'=>"TEXT",'author_label'=>"VARCHAR(100) NOT NULL DEFAULT ''",'sort_order'=>'INTEGER NOT NULL DEFAULT 0','deleted'=>'INTEGER NOT NULL DEFAULT 0','submitted'=>'INTEGER NOT NULL DEFAULT 0','post_key'=>'VARCHAR(64) NULL'];
  foreach($fileFields as $column=>$definition)if(!in_array($column,$columns,true))$db->exec("ALTER TABLE private_files ADD COLUMN $column $definition");
  $albumColumns=$mysql?array_column(all('SHOW COLUMNS FROM albums'),'Field'):array_column(all('PRAGMA table_info(albums)'),'name');
+ if(!in_array('download_allowed',$albumColumns,true))$db->exec('ALTER TABLE albums ADD COLUMN download_allowed INTEGER NOT NULL DEFAULT 0');
  if(!in_array('purpose',$albumColumns,true))$db->exec("ALTER TABLE albums ADD COLUMN purpose VARCHAR(30) NOT NULL DEFAULT ''");
  if(!in_array('cover_file_id',$albumColumns,true))$db->exec('ALTER TABLE albums ADD COLUMN cover_file_id INTEGER NULL');
  q("UPDATE albums SET name='フォトアルバム' WHERE name='思い出アルバム'");
