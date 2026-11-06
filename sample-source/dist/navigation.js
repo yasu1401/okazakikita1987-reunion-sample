@@ -37,6 +37,7 @@ function firstAdminContent(){const nav=root()?.querySelector('.admin-tabs');let 
 function destination(){const {path,params}=routeInfo();if(!spa&&location.hash&&document.getElementById(location.hash.slice(1)))return document.getElementById(location.hash.slice(1));
  if(document.getElementById('demoLogin')||document.querySelector('form [name="action"][value="login"]'))return headingNamed(/ログイン/);
  if(path==='/')return null;
+ if(path==='/my/photos')return document.getElementById('own-photo-'+Number(params.get('photo')))||document.getElementById('my-photo-posts');
  if(path==='/my/photo-post')return document.getElementById('photo-post');
  if(/^\/classes\/\d+/.test(path))return document.getElementById('class-roster-heading');
  if(/^\/gallery\/\d+/.test(path))return root().querySelector('.section h2');

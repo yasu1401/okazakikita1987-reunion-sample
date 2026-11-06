@@ -38,3 +38,17 @@ function restorePhoto(array $u,array $d):void {
  adminInquiry($u);$f=one("SELECT * FROM private_files WHERE id=? AND kind='photo'",[(int)($d['id']??0)]);requirev($f&&(int)$f['deleted']===1,'削除済みの写真がありません。');$reason=reasonv($d);
  q('UPDATE private_files SET deleted=0,published=0 WHERE id=?',[$f['id']]);logv((int)$u['id'],'写真を非公開で復元','file:'.$f['id'],photoSnapshot($f),['deleted'=>0,'published'=>0],$reason);
 }
+
+function ownedPhoto(array $u,int $id):array {
+ $f=one("SELECT * FROM private_files WHERE id=? AND kind='photo'",[$id]);
+ requirev($f&&(int)$f['owner_id']===(int)$u['id']&&(int)$f['submitted']===1&&!(int)$f['deleted'],'自分が投稿した有効な写真だけ操作できます。');return $f;
+}
+function editOwnPhoto(array $u,array $d):void {
+ $f=ownedPhoto($u,(int)($d['id']??0));[$title,$caption,$author]=photoText($d);$reason=reasonv($d);
+ q('UPDATE private_files SET photo_title=?,caption=?,author_label=? WHERE id=?',[$title,$caption,$author,$f['id']]);
+ logv((int)$u['id'],'本人が投稿内容を変更','file:'.$f['id'],photoSnapshot($f),photoSnapshot(one('SELECT * FROM private_files WHERE id=?',[$f['id']])),$reason);
+}
+function withdrawOwnPhoto(array $u,array $d):void {
+ $f=ownedPhoto($u,(int)($d['id']??0));$reason=reasonv($d);q('UPDATE private_files SET deleted=1,published=0 WHERE id=?',[$f['id']]);
+ logv((int)$u['id'],'本人が写真を取り下げ','file:'.$f['id'],photoSnapshot($f),['deleted'=>1,'published'=>0],$reason);
+}

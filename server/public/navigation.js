@@ -37,6 +37,7 @@ function firstAdminContent(){const nav=root()?.querySelector('.admin-tabs');let 
 function destination(){const {path,params}=routeInfo();if(!spa&&location.hash&&document.getElementById(location.hash.slice(1)))return document.getElementById(location.hash.slice(1));
  if(document.getElementById('demoLogin')||document.querySelector('form [name="action"][value="login"]'))return headingNamed(/ログイン/);
  if(path==='/')return null;
+ if(path==='/my/photos')return document.getElementById('own-photo-'+Number(params.get('photo')))||document.getElementById('my-photo-posts');
  if(path==='/my/photo-post')return document.getElementById('photo-post');
  if(/^\/classes\/\d+/.test(path))return document.getElementById('class-roster-heading');
  if(/^\/gallery\/\d+/.test(path))return root().querySelector('.section h2');
@@ -51,7 +52,7 @@ function destination(){const {path,params}=routeInfo();if(!spa&&location.hash&&d
  if(path==='/admin'&&['query','class_filter','status_filter','payment_filter'].some(k=>params.has(k)))return root().querySelector('[role="status"]')||root().querySelector('.table-wrap');
  if(path==='/admin/inquiries'&&params.has('status'))return root().querySelector('.table-wrap');
  if(path.startsWith('/admin'))return firstAdminContent();
- if(path==='/my')return root().querySelector('.registration-guide')||root().querySelector('h1');
+ if(path==='/my')return document.getElementById('my-person-heading')||root().querySelector('.registration-guide')||root().querySelector('h1');
  return root()?.querySelector('.page-title h1,h1,h2');
 }
 function successfulTarget(intent){if(!intent||!spa)return null;
