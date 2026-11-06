@@ -17,3 +17,16 @@ function expandDemoRoster():void {
   }echo "架空氏名の更新 {$updated}件、追加 {$added}件。既存の独自編集・入金・投稿・幹事指定は保持。\n";
  });
 }
+
+/** Explicit development fixture migration, never run for live registrations. */
+function varyDemoRoster():void {
+ global $config;requirev($config['mode']==='development','開発環境専用です。');schema();foreach(all('SELECT email FROM users') as $u)requirev((bool)preg_match('/^sample[0-9]+@example\.test$/D',$u['email']),'見本アカウントだけのDBで実行してください。');
+ atomic(function(){
+  $s=setting();if(($s['demoRosterVarietyVersion']??0)===1)return;$targets=[18,23,16,21,26,19,24,17,22,20];$next=1;foreach(all('SELECT email FROM users') as $u)if(preg_match('/^sample([0-9]+)@example\.test$/D',$u['email'],$m))$next=max($next,(int)$m[1]+1);$hash=password_hash('111111',PASSWORD_DEFAULT);$added=0;$organizers=[];
+  for($class=1;$class<=10;$class++){$rows=all('SELECT r.*,u.email,u.role FROM registrations r JOIN users u ON u.id=r.user_id WHERE r.class_no=? ORDER BY r.id',[$class]);$position=count($rows);$active=count(array_filter($rows,fn($r)=>$r['status']==='active'));while($active<$targets[$class-1]){demoInsert($next++,$class,$position++,$hash);$active++;$added++;}
+   if(!one("SELECT id FROM audit_logs WHERE entity=? AND action IN ('クラス幹事表示を指定','クラス幹事表示を解除')",['class:'.$class])){q('DELETE FROM class_contacts WHERE class_no=?',[$class]);$candidates=all("SELECT r.*,u.role FROM registrations r JOIN users u ON u.id=r.user_id WHERE r.class_no=? AND r.status='active' ORDER BY r.id",[$class]);$j=0;foreach($candidates as $r){$d=obj($r['data_json']);if(empty($d['public']))continue;q('INSERT INTO class_contacts (user_id,class_no,position_no) VALUES (?,?,?)',[$r['user_id'],$class,++$j]);if($j>=($class%2===0?3:2))break;}}
+  }
+  foreach([2,5,7,10] as $class){foreach(all("SELECT u.*,r.id registration_id,r.data_json FROM users u JOIN registrations r ON r.user_id=u.id WHERE r.class_no=? AND r.status='active' AND u.role='participant' AND r.revision=1 ORDER BY r.id",[$class]) as $u){$d=obj($u['data_json']);if(empty($d['public'])||one('SELECT id FROM class_contacts WHERE user_id=?',[$u['id']]))continue;if(one("SELECT id FROM audit_logs WHERE entity=? AND action LIKE '%権限%'",['user:'.$u['id']]))continue;q("UPDATE users SET role='organizer' WHERE id=?",[$u['id']]);logv(null,'架空の管理担当を指定','user:'.$u['id'],['role'=>'participant'],['role'=>'organizer'],'クラス幹事を兼ねない幹事表示の見本');$organizers[]=$u['id'];break;}}
+  $s['demoRosterVarietyVersion']=1;q('UPDATE settings SET data_json=? WHERE id=1',[jsonv($s)]);logv(null,'クラス別の人数と幹事見本を更新','demo',null,['added'=>$added,'counts'=>$targets,'organizers'=>$organizers],'開発専用の架空データ変更。既存入金と投稿は保持');
+ });
+}

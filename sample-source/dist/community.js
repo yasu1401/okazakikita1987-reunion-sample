@@ -1,4 +1,4 @@
-const C=window.Community;C.prepare(state);
+const C=window.Community;C.prepare(state);try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}
 const communityBaseRoute=route,communityBaseHome=home,communityBaseMy=myPage,communityBaseShell=adminShell,communityBasePhoto=photoPage;
 const inquiryLabels={new:'未対応',in_progress:'対応中',closed:'対応済み'};
 let pendingPhotoAlbum=null;
