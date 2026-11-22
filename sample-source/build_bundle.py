@@ -6,8 +6,10 @@ src=root/'dist';out=root/'github-pages';out.mkdir(exist_ok=True)
 s=(src/'index.html').read_text()
 s=s.replace('<link rel="stylesheet" href="style.css">','<style>'+(src/'style.css').read_text()+'</style>')
 s=s.replace('<link rel="stylesheet" href="home-hero.css?v=20261031-photo-gallery">','<style>'+(src/'home-hero.css').read_text()+'</style>')
-for name in ['form-assist.js','core.js','bank-account-core.js','app.js','finance.js','lifecycle-core.js','features.js','community-core.js','community.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js','session-ui.js','bank-account.js','class-support.js','album-ui.js','gallery-plus.js','lifecycle.js','duties-core.js','duties-demo.js','duties.js','navigation.js']:
+for name in ['form-assist.js','core.js','bank-account-core.js','app.js','finance.js','lifecycle-core.js','features.js','community-core.js','community.js','class-contact-hint.js','photos-core.js','photos.js','broadcast-core.js','broadcast.js','session-ui.js','bank-account.js','class-support.js','album-ui.js','gallery-plus.js','lifecycle.js','duties-core.js','duties-demo.js','duties.js','own-photos.js','vendor/qrcode-generator.js','vendor/jsQR.js','checkin.js','navigation.js']:
     code=(src/name).read_text().replace('</script','<\\/script')
+    if name.startswith('vendor/'):
+        code='/*\n'+(src/name).with_suffix('.LICENSE').read_text()+'\n*/\n'+code
     s=re.sub(r'<script src="'+re.escape(name)+r'(?:\?[^"]*)?"></script>',lambda _:'<script>'+code+'</script>',s)
 for p in (src/'assets').iterdir():
     mime={'.svg':'image/svg+xml','.jpg':'image/jpeg'}.get(p.suffix)

@@ -93,3 +93,10 @@ select.class-select option[value=""]{color:#777f7b;}
 
 #photo-post{scroll-margin-top:24px}
 .album-lightbox a[hidden]{display:none!important}
+
+/* Check-in demo */
+.checkin-qr{width:min(100%,18rem);height:auto;display:block;margin:1rem auto;image-rendering:pixelated}
+.checkin-results{display:grid;gap:.5rem;list-style:none;padding:0}
+.checkin-results .btn{white-space:normal;text-align:left}
+#checkin-confirm{scroll-margin-top:1rem}
+#checkin-camera-stop[hidden]{display:none}
