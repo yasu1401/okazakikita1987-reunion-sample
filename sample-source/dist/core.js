@@ -10,7 +10,7 @@ function sampleProfile(cl,index){return clone(SAMPLE_PROFILES[String(cl)][index%
 function seed(){
  const people=[];
  for(let cl=1;cl<=10;cl++)for(let j=0;j<16+(cl%3===0?1:0);j++){
-  const id=people.length+1,profile=sampleProfile(cl,j);people.push({id,number:String(id).padStart(3,'0'),class:cl,name:profile.name,kana:profile.kana,oldname:j%7===0?'田村':'',display:profile.name,email:'sample'+id+'@example.test',address:'愛知県架空市見本町1-2-3',postal:'000-0000',phone:'000-0000-0000',payer:'サンプル'+String(id).padStart(3,'0'),public:j!==0,status:j===16&&cl%3===0?'cancelled':'active',amount:8000,note:'架空データ・実在の卒業生とは関係ありません',created:'2026-10-27T10:00:00.000Z',revision:1});
+  const id=people.length+1,profile=sampleProfile(cl,j);people.push({id,number:String(id).padStart(3,'0'),class:cl,name:profile.name,kana:profile.kana,oldname:'',display:profile.name,email:'sample'+id+'@example.test',address:'愛知県架空市見本町1-2-3',postal:'000-0000',phone:'000-0000-0000',payer:'サンプル'+String(id).padStart(3,'0'),public:j!==0,status:j===16&&cl%3===0?'cancelled':'active',amount:8000,note:'架空データ・実在の卒業生とは関係ありません',created:'2026-10-27T10:00:00.000Z',revision:1});
  }
  const transactions=[],allocations=[];
  people.filter(p=>p.id%3!==0&&active(p)).forEach((p,i)=>{const id=i+1;transactions.push({id,date:'2026-10-27',memo:p.number+' サンプル入金',payer:p.payer,credit:p.id===4?9000:p.id===5?5000:8000,debit:0,balance:100000+i*8000,raw:[],fingerprint:'seed-'+id,state:'confirmed',review:'架空の初期入金',duplicateOf:null,importId:0});allocations.push({id,transactionId:id,personId:p.id,amount:p.id===4?9000:p.id===5?5000:8000,active:true,reason:'架空データの初期割当',at:'2026-10-27T10:00:00.000Z',actor:i%2?'幹事B（サンプル）':'幹事A（サンプル）'});});

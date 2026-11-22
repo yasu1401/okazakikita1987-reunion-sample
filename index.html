@@ -200,7 +200,7 @@ function sampleProfile(cl,index){return clone(SAMPLE_PROFILES[String(cl)][index%
 function seed(){
  const people=[];
  for(let cl=1;cl<=10;cl++)for(let j=0;j<16+(cl%3===0?1:0);j++){
-  const id=people.length+1,profile=sampleProfile(cl,j);people.push({id,number:String(id).padStart(3,'0'),class:cl,name:profile.name,kana:profile.kana,oldname:j%7===0?'田村':'',display:profile.name,email:'sample'+id+'@example.test',address:'愛知県架空市見本町1-2-3',postal:'000-0000',phone:'000-0000-0000',payer:'サンプル'+String(id).padStart(3,'0'),public:j!==0,status:j===16&&cl%3===0?'cancelled':'active',amount:8000,note:'架空データ・実在の卒業生とは関係ありません',created:'2026-10-27T10:00:00.000Z',revision:1});
+  const id=people.length+1,profile=sampleProfile(cl,j);people.push({id,number:String(id).padStart(3,'0'),class:cl,name:profile.name,kana:profile.kana,oldname:'',display:profile.name,email:'sample'+id+'@example.test',address:'愛知県架空市見本町1-2-3',postal:'000-0000',phone:'000-0000-0000',payer:'サンプル'+String(id).padStart(3,'0'),public:j!==0,status:j===16&&cl%3===0?'cancelled':'active',amount:8000,note:'架空データ・実在の卒業生とは関係ありません',created:'2026-10-27T10:00:00.000Z',revision:1});
  }
  const transactions=[],allocations=[];
  people.filter(p=>p.id%3!==0&&active(p)).forEach((p,i)=>{const id=i+1;transactions.push({id,date:'2026-10-27',memo:p.number+' サンプル入金',payer:p.payer,credit:p.id===4?9000:p.id===5?5000:8000,debit:0,balance:100000+i*8000,raw:[],fingerprint:'seed-'+id,state:'confirmed',review:'架空の初期入金',duplicateOf:null,importId:0});allocations.push({id,transactionId:id,personId:p.id,amount:p.id===4?9000:p.id===5?5000:8000,active:true,reason:'架空データの初期割当',at:'2026-10-27T10:00:00.000Z',actor:i%2?'幹事B（サンプル）':'幹事A（サンプル）'});});
@@ -465,15 +465,29 @@ function diversifyDemoRoster(s){if(s.sampleRosterVarietyVersion===1)return;s.peo
  for(const cl of [2,5,7,10]){const p=s.people.find(p=>p.class===cl&&fictional(p)&&R.active(p)&&p.public&&p.role==='participant'&&p.revision===1&&!s.classContacts.some(c=>c.userId===p.id)&&!s.logs.some(l=>l.entity===p.number&&/権限/.test(l.action)));if(p){p.role='organizer';assigned.push({id:p.id,class:cl,name:p.name});}}
  s.sampleRosterVarietyVersion=1;R.audit(s,'システム（サンプル）','クラス別の人数と幹事見本を更新','demo',null,{added,counts:DEMO_CLASS_COUNTS,ordinaryOrganizers:assigned},'架空データのみ追加。既存の申込・入金・投稿・手動のクラス幹事指定は保持');}
 function addSampleOldNames(s){
-  if(s.sampleOldNamesAdded)return;
-  const examples={3:'鈴木',20:'加藤',38:'近藤',70:'伊藤',103:'小林'};
-  for(const p of s.people){
-    const oldName=examples[p.id];
-    if(!oldName||p.email!=='sample'+p.id+'@example.test'||p.note!=='架空データ・実在の卒業生とは関係ありません')continue;
-    if(p.revision!==1||p.oldname||!p.public||!R.active(p))continue;
-    if(!p.name.startsWith(oldName+' '))p.oldname=oldName;
+  if(s.sampleOldNameVersion===2)return;
+  const previous={3:'鈴木',20:'加藤',38:'近藤',70:'伊藤',103:'小林'};
+  const surnames=['鈴木','石川','山田','長谷川','加藤','三浦','近藤','中村','伊藤','山本','小林','清水','佐藤','前田','高橋','村上','斎藤','西村','岡田','福田','青木','浅井','井上','森'];
+  for(let cl=1;cl<=10;cl++){
+    const femaleProfiles=Array.from({length:30},(_,i)=>R.sampleProfile(cl,i))
+      .filter(profile=>profile.persona==='F');
+    const demo=s.people.filter(p=>p.class===cl&&p.revision===1
+      &&p.email==='sample'+p.id+'@example.test'&&p.note==='架空データ・実在の卒業生とは関係ありません');
+    let examples=0;
+    let nextSurname=(cl-1)*2;
+    for(const p of demo){
+      if(p.oldname==='田村'||(previous[p.id]&&p.oldname===previous[p.id]))p.oldname='';
+      if(p.oldname||!p.public||!R.active(p)||examples>=2)continue;
+      if(!femaleProfiles.some(profile=>profile.name===p.name&&profile.kana===p.kana))continue;
+      const currentSurname=p.name.split(/\s+/)[0];
+      let surname=surnames[nextSurname++%surnames.length];
+      if(surname===currentSurname)surname=surnames[(20+cl-1)%surnames.length];
+      if(surname===currentSurname)continue;
+      p.oldname=surname;
+      examples++;
+    }
   }
-  s.sampleOldNamesAdded=true;
+  s.sampleOldNameVersion=2;
 }
 function prepare(s){refreshDemoRoster(s);addSampleOldNames(s);s.settings.classSize??=47;if(s.settings.dateLabel==='2028年○月○日（未定）')s.settings.dateLabel='2028年10月31日（火）（仮）';s.inquiries??=[];s.albums??=R.clone(ALBUMS);s.albums.forEach(a=>a.downloadAllowed??=false);if(!s.albumTemplateVersion){const oldNames=['当日の様子','集合写真','懇親会'],oldDescriptions=['再会のひとときを、写真で。','懐かしい顔が、勢ぞろい。','話の続きは、同じテーブルで。'];const defaults=s.albums.length===3&&s.albums.every((a,i)=>a.id===i+1&&a.name===oldNames[i]&&a.description===oldDescriptions[i]&&a.position===i+1&&a.visible===true)&&!s.logs.some(l=>l.action==='アルバム設定');if(defaults){const before=R.clone(s.albums);s.albums=R.clone(ALBUMS);s.photos.forEach(p=>p.albumId=1);R.audit(s,'システム（サンプル）','見本アルバムの整理','albums',before,s.albums,'固定の3分類から自由設定へ。写真は保持。');}s.albumTemplateVersion=1;}if(!s.classContacts){s.classContacts=[];for(let cl=1;cl<=10;cl++)s.people.filter(p=>p.class===cl&&R.active(p)).slice(0,2).forEach((p,j)=>s.classContacts.push({id:s.classContacts.length+1,userId:p.id,class:cl,position:j+1}));}s.photos.forEach((p,i)=>{p.albumId??=1;p.album=s.albums.find(a=>a.id===p.albumId)?.name||'アルバム未設定';});diversifyDemoRoster(s);}
 function admin(s,uid,onlyOwner=false){const p=s.people.find(p=>p.id===uid);if(!p||!['owner','organizer'].includes(p.role)||onlyOwner&&p.role!=='owner')throw new Error(onlyOwner?'管理者だけが設定できます。':'幹事のログインが必要です。');return p;}
