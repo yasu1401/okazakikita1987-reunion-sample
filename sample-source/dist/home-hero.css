@@ -104,3 +104,5 @@ select.class-select option[value=""]{color:#777f7b;}
 .roster-all-row + .class-tabs{margin-top:0}
 .roster-all-row a{display:flex;align-items:baseline;flex-wrap:wrap;gap:.35rem .7rem;font-size:.95rem}
 .roster-all-row a small{font-size:.85rem}
+
+.name-card .roster-old-name{margin-top:2px;font-size:.75rem;line-height:1.5;overflow-wrap:anywhere}
