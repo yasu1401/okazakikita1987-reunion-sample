@@ -100,3 +100,7 @@ select.class-select option[value=""]{color:#777f7b;}
 .checkin-results .btn{white-space:normal;text-align:left}
 #checkin-confirm{scroll-margin-top:1rem}
 #checkin-camera-stop[hidden]{display:none}
+.roster-all-row{margin:25px 0 8px}
+.roster-all-row + .class-tabs{margin-top:0}
+.roster-all-row a{display:flex;align-items:baseline;flex-wrap:wrap;gap:.35rem .7rem;font-size:.95rem}
+.roster-all-row a small{font-size:.85rem}
