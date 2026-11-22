@@ -1,10 +1,19 @@
 /* Browser-local fictional demo. Assignments never grant account permissions. */
 (function(root){'use strict';
 const R=root.Reunion;
-const ROLES={lead:'全体統括',deputy:'副統括',accounting:'会計担当',system:'システム担当',venue:'会場担当',planning:'企画運営担当',guest:'恩師・来賓対応',support:'応援者・協力者対応',reception:'受付担当',mc:'司会',photography:'写真撮影',recording:'記録担当',reunion:'二次会担当',other:'その他'};
+const ROLES={lead:'代表幹事',accounting:'会計担当',system:'システム担当',venue:'会場担当',planning:'企画運営担当',guest:'恩師・来賓対応',support:'応援者・協力者対応',reception:'受付担当',mc:'司会',photography:'写真撮影',recording:'記録担当',reunion:'二次会担当',other:'その他'};
 const RETIRED_ROLES={classInquiry:'クラスの問い合わせ担当',publicity:'広報担当',accessibility:'案内・配慮対応'};
 const STATUS={planned:'依頼・調整中',active:'担当決定',done:'完了',inactive:'担当解除'};
-function prepare(s){s.duties??=[];}
+function prepare(s){
+  s.duties??=[];
+  for(const duty of s.duties){
+    if(duty.roleKey!=='deputy')continue;
+    duty.roleKey='lead';
+    if(duty.note==='架空の担当割当見本。実際の幹事体制ではありません。'&&duty.description==='各係との連絡、全体統括の補佐'){
+      duty.description='各係との連絡と調整';
+    }
+  }
+}
 function staff(s,uid,write=false){const p=s.people.find(p=>p.id===Number(uid));if(!p||!(write?p.role==='owner':['owner','organizer'].includes(p.role)))throw new Error(write?'担当の設定は管理者が行います。':'幹事権限が必要です。');return p;}
 function txt(v,max,required=false){v=String(v??'').trim();if(v.length>max||required&&!v)throw new Error('必須項目と文字数を確認してください。');return v;}
 function save(s,d,uid){prepare(s);const a=staff(s,uid,true),id=Number(d.id||0),old=id?s.duties.find(x=>x.id===id):null;if(id&&!old)throw new Error('担当記録がありません。');if(old&&Number(d.revision)!==old.revision)throw new Error('他の操作で更新されています。画面を開き直してください。');const roleKey=String(d.roleKey||'');if(!ROLES[roleKey])throw new Error('担当を選択してください。');const kind=String(d.kind||'');if(!['member','external'].includes(kind))throw new Error('担当者の区分を選択してください。');const userId=kind==='member'?Number(d.userId):null;const person=userId?s.people.find(p=>p.id===userId):null;if(kind==='member'&&!person)throw new Error('登録者を選択してください。');const externalName=kind==='external'?txt(d.externalName,100,true):'';const status=String(d.status||'active');if(!STATUS[status])throw new Error('担当状況を選択してください。');const cl=Number(d.class||0);if(!Number.isInteger(cl)||cl<0||cl>10)throw new Error('対象クラスを確認してください。');const date=txt(d.dueDate,10);if(date&&(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date))throw new Error('対応予定日を確認してください。');const x={id:id||Math.max(0,...s.duties.map(x=>x.id))+1,revision:(old?.revision||0)+1,roleKey,customRole:roleKey==='other'?txt(d.customRole,100,true):'',kind,userId,externalName,class:cl,scope:txt(d.scope,200),description:txt(d.description,2000),contact:kind==='external'?txt(d.contact,300):'',note:txt(d.note,2000),status,dueDate:date,created:old?.created||new Date().toISOString(),updated:new Date().toISOString()};const reason=txt(d.reason,1000,true);R.audit(s,a.name,'担当・役割を設定','duty:'+x.id,old?R.clone(old):null,x,reason);if(old)Object.assign(old,x);else s.duties.push(x);return x;}
