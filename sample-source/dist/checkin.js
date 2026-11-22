@@ -97,17 +97,30 @@
     return box.innerHTML;
   };
 
+  function attendanceCounts(s) {
+    const byClass = Array(11).fill(0);
+    let total = 0;
+    const attendance = read(s).attendance;
+    for (const p of s.people) {
+      if (!R.active(p) || !attendance[p.id]) continue;
+      total++;
+      byClass[p.class]++;
+    }
+    return {total,byClass};
+  }
+
   function rosterTotals(path) {
-    if (!/^\/classes(?:\/(10|[0-9]))?$/.test(path)) return;
+    const match = path.match(/^\/classes(?:\/(10|[0-9]))?$/);
+    if (!match) return;
+    const cl = Number(match[1] || 0);
     const tabs = main.querySelector('.class-tabs');
     const all = tabs?.querySelector('a[href="#/classes/0"]');
     if (!all) return;
 
     const counts = R.counts(state);
-    const showAttendance = showRosterAttendance(state);
-    const checked = showAttendance ? state.people.filter(p => R.active(p) && record(state,p)) : [];
-    const allCount = showAttendance
-      ? `${counts.total}人中 受付済み ${checked.length}人`
+    const checked = showRosterAttendance(state) ? attendanceCounts(state) : null;
+    const allCount = checked && cl === 0
+      ? `${counts.total}人中 受付済み ${checked.total}人`
       : `参加予定 ${counts.total}人`;
     all.innerHTML = `<strong>全クラス</strong><small> ${allCount}</small>`;
     const summary = document.createElement('div');
@@ -115,12 +128,25 @@
     tabs.before(summary);
     summary.append(all);
 
-    if (showAttendance) {
-      tabs.querySelectorAll('[data-roster-class]').forEach((link,index) => {
-        const cl = index+1, total = checked.filter(p => p.class===cl).length;
-        link.innerHTML = `<strong>${esc(R.classLabel(cl))}</strong><small> ${counts.classes[index]}人中 受付済み ${total}人</small>`;
-      });
+    if (checked && cl > 0) {
+      main.querySelector('#class-roster-heading')?.insertAdjacentHTML('afterend',
+        `<p class="notice roster-selected-checkin">${esc(R.classLabel(cl))} ${counts.classes[cl-1]}人中 受付済み ${checked.byClass[cl]}人</p>`);
     }
+  }
+
+  function deskTotals() {
+    const counts = R.counts(state);
+    const checked = attendanceCounts(state);
+    const rows = counts.classes.map((count,index)=>[
+      esc(R.classLabel(index+1)), `${count}人中 ${checked.byClass[index+1]}人`
+    ]);
+    const unassigned = counts.total - counts.classes.reduce((sum,n)=>sum+n,0);
+    if (unassigned > 0) rows.push(['クラス未確認',`${unassigned}人中 ${checked.byClass[0]}人`]);
+    return `<section class="panel" id="checkin-totals">
+      <h2>受付人数</h2>
+      <p class="notice"><strong>全クラス ${counts.total}人中 受付済み ${checked.total}人</strong></p>
+      ${table(['クラス','受付済み'],rows)}
+    </section>`;
   }
 
   function normalized(s) {
@@ -165,6 +191,7 @@
       <form id="checkin-search">${field('q','氏名・ふりがな・クラス・申込番号',search)}<button class="btn btn-outline">検索</button></form>
       <div id="checkin-results" aria-live="polite">${results()}</div></section>
       <div id="checkin-selection">${personCard()}</div>
+      ${deskTotals()}
       <section class="panel"><h2>受付操作履歴</h2>${historyList()}</section>`);
   }
 
