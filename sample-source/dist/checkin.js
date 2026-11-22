@@ -33,7 +33,14 @@
     const {start,end,clock} = windowFor(s);
     return start <= clock && clock <= end;
   };
-  const showRosterAttendance = s => !!current() && windowFor(s).clock.slice(0,10) === eventDay(s);
+  function showRosterAttendance(s) {
+    if (!current()) return false;
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit'
+    }).formatToParts(new Date());
+    const day = Object.fromEntries(parts.map(part => [part.type,part.value]));
+    return `${day.year}-${day.month}-${day.day}` === eventDay(s);
+  }
   const stamp = value => value.replace('T',' ');
   const record = (s,p) => read(s).attendance[p.id];
 
@@ -208,7 +215,7 @@
     const v = windowFor(state);
     const staff = state.people.filter(p=>p.role==='organizer');
     return adminShell('checkin-settings',`<section class="panel"><h2>受付時間と担当者</h2>
-      <p>日時は日本時間。名簿の受付状況は、見本の現在日時が開催日と同じ日のみ、ログインした方に表示します。</p>
+      <p>日時は日本時間です。見本の日時は当日受付の操作確認に使います。参加予定の名簿に受付状況が出るのは、実際の開催日にログインしたときです。</p>
       <form id="checkin-settings-form">
       ${field('start','受付開始',v.start,'datetime-local')}
       ${field('end','受付終了',v.end,'datetime-local')}
