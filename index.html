@@ -13764,6 +13764,14 @@ function formAction(f){return f?.querySelector('[name="action"]')?.value||'';}
 function formKey(f){return {id:f.id||'',action:formAction(f),data:Object.fromEntries(Object.entries(f.dataset).filter(([k])=>['photo','lifeForm','dutyForm','community','id'].includes(k))),fields:Object.fromEntries(['id','class','registration_id','bank_id','expense_id','refund_id'].map(k=>[k,f.querySelector('input[type="hidden"][name="'+k+'"]')?.value]).filter(x=>x[1]!=null))};}
 function matchForm(k){return Array.from(root()?.querySelectorAll('form')||[]).find(f=>(k.id?f.id===k.id:formAction(f)===k.action&&Object.entries(k.data).every(([n,v])=>f.dataset[n]===v)&&Object.entries(k.fields).every(([n,v])=>f.querySelector('[name="'+n+'"]')?.value===v)));}
 function decorate(){const r=root();if(!r)return;
+ if(spa){
+  const path=routeInfo().path,links=Array.from(r.querySelectorAll('.admin-tabs a'));
+  const selected=links.find(a=>a.hash==='#'+path)||links.find(a=>a.hash!=='#/admin'&&path.startsWith(a.hash.slice(1)+'/'));
+  if(selected)for(const a of links){
+   a.classList.toggle('active',a===selected);
+   if(a===selected)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+  }
+ }
  r.querySelectorAll('form').forEach(f=>{const action=formAction(f),id=f.dataset.id||f.querySelector('[name="id"]')?.value;
   const photo=f.dataset.photo||['photo_edit','photo_remove','photo_restore'].includes(action),refund=f.dataset.lifeForm&&id&&id!=='0'||/^refund_(record|cancel|undo|link)$/.test(action);
   if(photo&&id)f.closest('article,.panel')?.setAttribute('data-nav-record','photo:'+id);
@@ -13789,6 +13797,20 @@ function restore(c){if(!c)return;for(const [id,v]of Object.entries(c.filters||{}
 }
 function routeInfo(){if(spa){const u=new URL(location.hash.slice(1)||'/',location.href);return {path:u.pathname,params:u.searchParams};}const u=new URL(location.href),p=u.searchParams.get('page')||'home',id=u.searchParams.get('id')||(p==='admin_refunds'?u.searchParams.get('registration_id'):null),cl=u.searchParams.get('class'),album=u.searchParams.get('album');return {path:p==='home'?'/':p==='classes'?'/classes'+(cl?'/'+cl:''):p==='gallery'?'/gallery'+(album?'/'+album:''):p==='edit'?'/register/edit':p==='admin'?'/admin':p.startsWith('admin_')?'/admin/'+p.slice(6)+(id?'/'+id:''):'/'+p,params:u.searchParams};}
 function headingNamed(pattern){return Array.from(root()?.querySelectorAll('h1,h2,h3,h4')||[]).find(x=>pattern.test(text(x)));}
+function focusAdminMenu(){
+ const r=root(),nav=r?.querySelector('.admin-tabs');
+ if(!nav)return false;
+ nav.querySelector('[aria-current="page"],a.active')?.focus({preventScroll:true});
+ const header=document.querySelector('body > header');
+ const pinned=header&&['fixed','sticky'].includes(getComputedStyle(header).position);
+ const inset=pinned?header.offsetHeight:0;
+ const top=Math.max(0,scrollY+nav.getBoundingClientRect().top-inset-12);
+ const scroller=document.scrollingElement;
+ const missing=top+scroller.clientHeight-scroller.scrollHeight;
+ if(missing>0)r.style.minHeight=Math.ceil(r.getBoundingClientRect().height+missing)+'px';
+ window.scrollTo({top,left:0,behavior:'instant'});
+ return true;
+}
 function firstAdminContent(){const nav=root()?.querySelector('.admin-tabs');let el=nav?.nextElementSibling;while(el&&el.matches('p,.notice,.button-row'))el=el.nextElementSibling;return el?.querySelector('h1,h2,h3')||el;}
 function destination(){const {path,params}=routeInfo();if(!spa&&location.hash&&document.getElementById(location.hash.slice(1)))return document.getElementById(location.hash.slice(1));
  if(document.getElementById('demoLogin')||document.querySelector('form [name="action"][value="login"]'))return headingNamed(/ログイン/);
@@ -13829,6 +13851,7 @@ function remember(ev){const el=ev.target.closest('button,a,input,select,form');i
  const c=inDialog?(modalOrigin||capture(null)):capture(el);
  pending={...c,from:location.hash,href:el.closest('a')?.getAttribute('href')||'',label:text(el),kind:'operation',action:formAction(f)};
  if(ev.type==='click'&&el.closest('header #mainNav,header .brand'))pending.kind='main-menu';
+ if(ev.type==='click'&&el.closest('.admin-tabs a'))pending.kind='admin-menu';
  if(el.matches('[data-action="person-detail"],[data-action="transaction-detail"]'))modalOrigin=c;
  if(el.matches('[data-action="import-fixture"]')||el.id==='bankFile')pending.kind='import';
  if(el.id==='photoFiles')pending.kind='photo-upload';
@@ -13842,14 +13865,14 @@ function remember(ev){const el=ev.target.closest('button,a,input,select,form');i
 window.addEventListener('click',remember,true);window.addEventListener('submit',remember,true);window.addEventListener('change',remember,true);
 // Native validation should reveal the first invalid field without changing pages.
 let invalidScheduled=false;window.addEventListener('invalid',ev=>{if(invalidScheduled)return;const form=ev.target.form;if(!form)return;invalidScheduled=true;queueMicrotask(()=>{invalidScheduled=false;const field=form.querySelector('input:invalid,select:invalid,textarea:invalid');if(field){field.focus({preventScroll:true});field.scrollIntoView({block:'center',behavior:'instant'});}});},true);
-if(spa){if('scrollRestoration' in history)history.scrollRestoration='manual';const base=route;route=function(){const hash=location.hash||'#/',different=hash!==rendered,fresh=pending&&Date.now()-pending.at<180000?pending:null,c=fresh||capture(document.activeElement),token=++sequence;pending=null;base();decorate();const success=successfulTarget(fresh);
- if(fresh?.kind==='main-menu')window.scrollTo({top:0,left:0,behavior:'instant'});else if(success)focusAt(success);else if(different||fresh?.href===hash){const target=destination();if(target)focusAt(target);else if(routeInfo().path==='/')window.scrollTo({top:0,left:0,behavior:'instant'});}else restore(c);
+if(spa){if('scrollRestoration' in history)history.scrollRestoration='manual';const base=route;route=function(){const hash=location.hash||'#/',different=hash!==rendered,fresh=pending&&Date.now()-pending.at<180000?pending:null,c=fresh||capture(document.activeElement),token=++sequence;pending=null;if(different)root()?.style.removeProperty('min-height');base();decorate();const success=successfulTarget(fresh);
+ if(fresh?.kind==='main-menu')window.scrollTo({top:0,left:0,behavior:'instant'});else if(fresh?.kind==='admin-menu')focusAdminMenu();else if(success)focusAt(success);else if(different||fresh?.href===hash){const target=destination();if(target)focusAt(target);else if(routeInfo().path==='/')window.scrollTo({top:0,left:0,behavior:'instant'});}else restore(c);
  rendered=hash;const dlg=document.querySelector('dialog[open]');if(dlg)window.scrollTo({left:c.x,top:c.y,behavior:'instant'});
  // An immediate route() followed by hashchange must not lose the restored context.
  queueMicrotask(()=>{if(token!==sequence)return;const error=root()?.querySelector('.error-text:not(:empty)');if(error&&fresh&&fresh.kind==='operation'&&error.getBoundingClientRect().height)focusAt(error);});
  };window.removeEventListener('hashchange',base);window.addEventListener('hashchange',route);route();
  // Re-selecting the current page still opens its actual content.
- window.addEventListener('click',ev=>{const a=ev.target.closest('a');if(!a||ev.defaultPrevented||ev.button!==0||ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.altKey||a.getAttribute('href')?.startsWith('#/')!==true||a.hash!==location.hash)return;ev.preventDefault();if(a.closest('header #mainNav,header .brand')){pending=null;window.scrollTo({top:0,left:0,behavior:'instant'});}else focusAt(destination());});
+ window.addEventListener('click',ev=>{const a=ev.target.closest('a');if(!a||ev.defaultPrevented||ev.button!==0||ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.altKey||a.getAttribute('href')?.startsWith('#/')!==true||a.hash!==location.hash)return;ev.preventDefault();if(a.closest('header #mainNav,header .brand')){pending=null;window.scrollTo({top:0,left:0,behavior:'instant'});}else if(a.closest('.admin-tabs')){pending=null;focusAdminMenu();}else focusAt(destination());});
 }else{
  decorate();let saved=null;try{saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');sessionStorage.removeItem(storageKey);}catch{}
  const page=new URL(location.href).searchParams.get('page')||'home',fromMainMenu=saved?.kind==='main-menu'&&Date.now()-saved.at<180000;if(saved&&(Date.now()-saved.at>=180000||saved.page!==page))saved=null;let operationResult=null;
