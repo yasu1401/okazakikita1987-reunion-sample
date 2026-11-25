@@ -17,6 +17,8 @@ for p in (src/'assets').iterdir():
 s=s.replace('/assets/social-preview.png','/social-preview.png')
 (out/'index.html').write_text(s)
 (out/'social-preview.png').write_bytes((src/'assets/social-preview.png').read_bytes())
+for name in ('apple-touch-icon.png','okakita-icon-192.png','okakita-icon-512.png','manifest.webmanifest'):
+    (out/name).write_bytes((src/name).read_bytes())
 (out/'.nojekyll').touch()
 server=root.parent/'server'
 with zipfile.ZipFile(out/'server-source.zip','w',zipfile.ZIP_DEFLATED) as z:
