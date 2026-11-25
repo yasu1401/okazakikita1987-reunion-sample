@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="#14594d"/><path d="M18 46V18m3 16L40 18M24 31l20 15" stroke="#f8f5ed" stroke-width="3" fill="none"/><circle cx="45" cy="17" r="5" fill="#d9653b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="mark-title">
+  <title id="mark-title">岡北 1987 同窓会</title>
+  <rect width="64" height="64" rx="16" fill="#14594d"/>
+  <rect x="3.5" y="3.5" width="57" height="57" rx="13" fill="none" stroke="#e9d392" stroke-opacity=".65"/>
+  <path d="M25 12h14" stroke="#e9d392" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M49 8c0 4-2 6-6 6 4 0 6 2 6 6 0-4 2-6 6-6-4 0-6-2-6-6z" fill="#f2a16d"/>
+  <g fill="none" stroke="#fff8e6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 岡 -->
+    <path d="M11 41V20h18v19q0 2-2 2h-2M14 28h12m-10-5 2 3m7-3-2 3m-3 3v8m-5-4v4h10v-4"/>
+    <!-- 北 -->
+    <path d="M42 20v21m-8-14h8m-9 11 9-4m5-14v18q0 2 2 2h2q3 0 3-3m-7-8 7-5"/>
+  </g>
+  <path d="M13 49h8m22 0h8" stroke="#e9d392" stroke-width="1.1" stroke-linecap="round"/>
+  <text x="32" y="52" fill="#e9d392" text-anchor="middle" font-family="Georgia,serif" font-size="8" font-weight="bold" letter-spacing=".6">1987</text>
+</svg>
